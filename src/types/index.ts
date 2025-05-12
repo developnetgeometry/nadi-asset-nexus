@@ -1,4 +1,3 @@
-
 // User Roles
 export type UserRole = 
   | 'TP_ADMIN'
@@ -72,17 +71,20 @@ export interface MaintenanceDocket {
   category: DocketCategory;
   slaCategory: SLACategory;
   status: DocketStatus;
+  location: string; // Explicitly define location property
   assetId?: string;
   assignedTo?: string;
   requestedBy: string;
+  submittedBy: string;
+  submittedDate: string;
   estimatedCompletionDate: string;
   actualCompletionDate?: string;
   lastActionBy: string;
   lastActionDate: string;
   remarks?: string;
   attachments?: {
-    before?: string[];
-    after?: string[];
+    before: string[];
+    after: string[];
   };
   isOverdue?: boolean;
   duspRecommendation?: boolean;

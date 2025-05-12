@@ -46,6 +46,8 @@ const NewDocketForm = ({ onClose }: NewDocketFormProps) => {
     const currentYear = new Date().getFullYear();
     const docketNumber = `MD-${currentYear}-${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`;
     
+    console.log("Creating new docket:", { title, description, location });
+    
     // Create new docket
     const newDocket: MaintenanceDocket = {
       id,
@@ -55,7 +57,6 @@ const NewDocketForm = ({ onClose }: NewDocketFormProps) => {
       type,
       category: "ICT" as DocketCategory, // Default category
       slaCategory,
-      location: location, // This matches the type definition in MaintenanceDocket
       submittedBy: currentUser?.name || "Unknown User",
       requestedBy: currentUser?.name || "Unknown User",
       submittedDate: new Date().toISOString(),
@@ -67,11 +68,19 @@ const NewDocketForm = ({ onClose }: NewDocketFormProps) => {
       isOverdue: false,
       attachments: { before: [], after: [] },
       createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
+      // Add the location field properly
+      location: location
     };
+    
+    // Log the docket for debugging
+    console.log("New docket created:", newDocket);
     
     // Add to shared dockets
     sharedDockets.updateDocket(newDocket);
+    
+    // Log to verify the update function is called
+    console.log("Updating shared dockets");
     
     toast.success("Maintenance docket created successfully");
     onClose();
