@@ -215,15 +215,21 @@ export const mockDockets: MaintenanceDocket[] = [
     category: "ICT",
     slaCategory: "NORMAL",
     status: "CLOSED",
+    location: "Kuala Lumpur Data Center, Room 101", // Added location
     assetId: "a1",
     assignedTo: "u2",
     requestedBy: "u1",
+    submittedBy: "u1", // Added submittedBy
+    submittedDate: "2023-05-01T09:00:00Z", // Added submittedDate
     estimatedCompletionDate: "2023-05-25",
     actualCompletionDate: "2023-05-20",
     lastActionBy: "u2",
     lastActionDate: "2023-05-20",
     createdAt: "2023-05-01T09:00:00Z",
-    updatedAt: "2023-05-20T16:30:00Z"
+    updatedAt: "2023-05-20T16:30:00Z",
+    remarks: "",
+    isOverdue: false,
+    attachments: { before: [], after: [] }
   },
   {
     id: "d2",
@@ -234,14 +240,20 @@ export const mockDockets: MaintenanceDocket[] = [
     category: "HVAC",
     slaCategory: "CRITICAL",
     status: "APPROVED",
+    location: "Kuala Lumpur Data Center, Room 101", // Added location
     assetId: "a3",
     assignedTo: "u5",
     requestedBy: "u2",
+    submittedBy: "u2", // Added submittedBy
+    submittedDate: "2023-06-01T10:15:00Z", // Added submittedDate
     estimatedCompletionDate: "2023-06-15",
     lastActionBy: "u3",
     lastActionDate: "2023-06-05",
     createdAt: "2023-06-01T10:15:00Z",
-    updatedAt: "2023-06-05T14:20:00Z"
+    updatedAt: "2023-06-05T14:20:00Z",
+    remarks: "",
+    isOverdue: false,
+    attachments: { before: [], after: [] }
   },
   {
     id: "d3",
@@ -252,14 +264,20 @@ export const mockDockets: MaintenanceDocket[] = [
     category: "ELECTRICAL",
     slaCategory: "NORMAL",
     status: "SUBMITTED",
+    location: "Johor Bahru Site, Main Building", // Added location
     assetId: "a4",
     assignedTo: "u5",
     requestedBy: "u2",
+    submittedBy: "u2", // Added submittedBy
+    submittedDate: "2023-06-15T08:45:00Z", // Added submittedDate
     estimatedCompletionDate: "2023-07-10",
     lastActionBy: "u2",
     lastActionDate: "2023-06-15",
     createdAt: "2023-06-15T08:45:00Z",
-    updatedAt: "2023-06-15T08:45:00Z"
+    updatedAt: "2023-06-15T08:45:00Z",
+    remarks: "",
+    isOverdue: false,
+    attachments: { before: [], after: [] }
   },
   {
     id: "d4",
@@ -270,13 +288,19 @@ export const mockDockets: MaintenanceDocket[] = [
     category: "ICT",
     slaCategory: "LOW",
     status: "DRAFTED",
+    location: "Penang Office, Server Room", // Added location
     assetId: "a2",
     requestedBy: "u2",
+    submittedBy: "u2", // Added submittedBy
+    submittedDate: "2023-06-20T11:30:00Z", // Added submittedDate
     estimatedCompletionDate: "2023-07-20",
     lastActionBy: "u2",
     lastActionDate: "2023-06-20",
     createdAt: "2023-06-20T11:30:00Z",
-    updatedAt: "2023-06-20T11:30:00Z"
+    updatedAt: "2023-06-20T11:30:00Z",
+    remarks: "",
+    isOverdue: false,
+    attachments: { before: [], after: [] }
   },
   {
     id: "d5",
@@ -287,14 +311,20 @@ export const mockDockets: MaintenanceDocket[] = [
     category: "ICT",
     slaCategory: "LOW",
     status: "REJECTED",
+    location: "Kuching Site, Perimeter", // Added location
     assetId: "a5",
     assignedTo: "u5",
     requestedBy: "u2",
+    submittedBy: "u2", // Added submittedBy
+    submittedDate: "2023-06-20T14:00:00Z", // Added submittedDate
     estimatedCompletionDate: "2023-06-30",
     lastActionBy: "u3",
     lastActionDate: "2023-06-22",
     createdAt: "2023-06-20T14:00:00Z",
-    updatedAt: "2023-06-22T09:15:00Z"
+    updatedAt: "2023-06-22T09:15:00Z",
+    remarks: "",
+    isOverdue: false,
+    attachments: { before: [], after: [] }
   },
   {
     id: "d6",
@@ -305,14 +335,20 @@ export const mockDockets: MaintenanceDocket[] = [
     category: "ELECTRICAL",
     slaCategory: "NORMAL",
     status: "APPROVED",
+    location: "Kuala Lumpur Data Center, External", // Added location
     assetId: "a6",
     assignedTo: "u5",
     requestedBy: "u1",
+    submittedBy: "u1", // Added submittedBy
+    submittedDate: "2023-06-20T15:30:00Z", // Added submittedDate
     estimatedCompletionDate: "2023-07-05",
     lastActionBy: "u3",
     lastActionDate: "2023-06-25",
     createdAt: "2023-06-20T15:30:00Z",
-    updatedAt: "2023-06-25T10:45:00Z"
+    updatedAt: "2023-06-25T10:45:00Z",
+    remarks: "",
+    isOverdue: false,
+    attachments: { before: [], after: [] }
   }
 ];
 
