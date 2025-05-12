@@ -15,7 +15,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CalendarDays } from "lucide-react";
 import { format } from "date-fns";
-import { MaintenanceType, SLACategory, MaintenanceDocket } from "@/types";
+import { MaintenanceType, SLACategory, MaintenanceDocket, DocketCategory } from "@/types";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { v4 as uuid } from "uuid";
@@ -53,9 +53,11 @@ const NewDocketForm = ({ onClose }: NewDocketFormProps) => {
       title,
       description,
       type,
+      category: "ICT" as DocketCategory, // Default category
       slaCategory,
       location,
       submittedBy: currentUser?.name || "Unknown User",
+      requestedBy: currentUser?.name || "Unknown User",
       submittedDate: new Date().toISOString(),
       estimatedCompletionDate: date.toISOString(),
       status: "DRAFTED",
@@ -63,12 +65,12 @@ const NewDocketForm = ({ onClose }: NewDocketFormProps) => {
       lastActionBy: currentUser?.name || "Unknown User",
       remarks: "",
       isOverdue: false,
-      attachments: [],
-      comments: []
+      attachments: { before: [], after: [] },
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     };
     
     // Add to shared dockets
-    const allDockets = sharedDockets.getDockets();
     sharedDockets.updateDocket(newDocket);
     
     toast.success("Maintenance docket created successfully");
