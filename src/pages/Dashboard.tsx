@@ -1,4 +1,3 @@
-
 import { BarChart4, Box, CheckCircle, Clock, AlertCircle, Wrench } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "../contexts/AuthContext";
@@ -244,8 +243,13 @@ const Dashboard = () => {
               </tbody>
             </table>
           </div>
-          <div className="mt-4 flex justify-center">
-            <Button variant="outline">View All Dockets</Button>
+          <div className="mt-6 flex justify-center">
+            <Button 
+              variant="outline" 
+              className="px-6 transition-all hover:shadow-md"
+            >
+              View All Dockets
+            </Button>
           </div>
         </CardContent>
       </Card>
