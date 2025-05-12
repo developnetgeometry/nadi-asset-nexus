@@ -1,4 +1,3 @@
-
 import { Asset, MaintenanceDocket, User, MaintenanceType, DocketStatus, SLACategory, DocketCategory, AssetStatus, UserRole } from "../types";
 
 // Mock Users Data
@@ -62,6 +61,18 @@ export const mockUsers: User[] = [
     isActive: true,
     createdAt: "2023-06-19T11:45:00Z",
     updatedAt: "2023-06-19T11:45:00Z"
+  },
+  {
+    id: "u6",
+    name: "Site Operator",
+    email: "site@tp.example.com",
+    role: "TP_SITE",
+    organization: "TechPro Solutions",
+    department: "Site Operations",
+    phoneNumber: "+6018-123-4567",
+    isActive: true,
+    createdAt: "2023-06-20T10:00:00Z",
+    updatedAt: "2023-06-20T10:00:00Z"
   }
 ];
 

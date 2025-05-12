@@ -31,6 +31,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setTimeout(() => {
         // For demo, just look up the user by email
         const user = mockUsers.find((u) => u.email.toLowerCase() === email.toLowerCase());
+        
+        // Add debugging
+        console.log("Login attempt:", { email, foundUser: !!user, availableUsers: mockUsers.map(u => u.email) });
+        
         if (user) {
           setCurrentUser(user);
           toast.success(`Welcome, ${user.name}`);

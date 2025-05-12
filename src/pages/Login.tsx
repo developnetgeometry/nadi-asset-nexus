@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
@@ -51,10 +50,14 @@ const Login = () => {
     e.preventDefault();
     setIsLoading(true);
     try {
+      console.log("Attempting login with:", email, password);
       const success = await login(email, password);
+      console.log("Login result:", success);
       if (success) {
         navigate("/");
       }
+    } catch (error) {
+      console.error("Login error:", error);
     } finally {
       setIsLoading(false);
     }
