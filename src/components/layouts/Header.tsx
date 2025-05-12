@@ -1,5 +1,5 @@
 
-import { Menu, Bell, Settings, User } from "lucide-react";
+import { Menu, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "../../contexts/AuthContext";
 import { 
@@ -8,6 +8,7 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
+import NotificationsDropdown from "./NotificationsDropdown";
 
 interface HeaderProps {
   toggleSidebar: () => void;
@@ -34,12 +35,7 @@ const Header = ({ toggleSidebar, userName, userRole }: HeaderProps) => {
         </div>
 
         <div className="flex items-center space-x-3">
-          <Button variant="ghost" size="icon" className="relative">
-            <Bell className="h-5 w-5" />
-            <span className="absolute top-1 right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
-              3
-            </span>
-          </Button>
+          <NotificationsDropdown />
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -59,10 +55,6 @@ const Header = ({ toggleSidebar, userName, userRole }: HeaderProps) => {
               <DropdownMenuItem>
                 <User className="mr-2 h-4 w-4" />
                 <span>Profile</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Settings className="mr-2 h-4 w-4" />
-                <span>Settings</span>
               </DropdownMenuItem>
               <DropdownMenuItem onClick={logout}>
                 <svg

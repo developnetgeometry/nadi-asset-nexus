@@ -28,6 +28,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { formatMaintenanceType, getDocketStatusClass } from "../utils/formatters";
 import DocketDetailsDialog from "../components/dockets/DocketDetailsDialog";
+import NewDocketDialog from "../components/dockets/NewDocketDialog";
 
 const MaintenanceDockets = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -36,6 +37,7 @@ const MaintenanceDockets = () => {
   const [currentTab, setCurrentTab] = useState("all");
   const [selectedDocket, setSelectedDocket] = useState<MaintenanceDocket | null>(null);
   const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
+  const [isNewDocketDialogOpen, setIsNewDocketDialogOpen] = useState(false);
   const { currentUser, sharedDockets } = useAuth();
   
   // Use the shared dockets state
@@ -130,8 +132,7 @@ const MaintenanceDockets = () => {
 
   // Function to create a new docket
   const createNewDocket = () => {
-    // In a real app, this would open a form to create a new docket
-    toast.info("Opening new maintenance request form");
+    setIsNewDocketDialogOpen(true);
   };
 
   // Helper function to get status icon
@@ -642,6 +643,12 @@ const MaintenanceDockets = () => {
         isOpen={isDetailsDialogOpen}
         onClose={() => setIsDetailsDialogOpen(false)}
         onStatusUpdate={handleDocketStatusUpdate}
+      />
+
+      {/* New Docket Dialog */}
+      <NewDocketDialog 
+        isOpen={isNewDocketDialogOpen}
+        onClose={() => setIsNewDocketDialogOpen(false)}
       />
     </div>
   );
