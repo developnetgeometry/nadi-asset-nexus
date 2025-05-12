@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { 
   Box, 
@@ -10,7 +11,8 @@ import {
   ChevronDown,
   CheckCircle,
   AlertTriangle,
-  XCircle 
+  XCircle,
+  Image
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -91,9 +93,9 @@ const Assets = () => {
   const filteredAssets = assets.filter(asset => {
     // Filter by search term
     const matchesSearch = searchTerm === "" || 
-      asset.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      asset.item_name.toLowerCase().includes(searchTerm.toLowerCase()) || 
       asset.serial_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      asset.location.toLowerCase().includes(searchTerm.toLowerCase());
+      asset.location_id.toLowerCase().includes(searchTerm.toLowerCase());
       
     // Filter by status if selected
     const matchesStatus = statusFilter === null || asset.status === statusFilter;
@@ -115,7 +117,7 @@ const Assets = () => {
       setAssets(assets.filter(asset => asset.id !== assetToDelete.id));
       toast({
         title: "Asset deleted",
-        description: `${assetToDelete.name} has been removed from assets.`,
+        description: `${assetToDelete.item_name} has been removed from assets.`,
       });
     }
     setDeleteDialogOpen(false);
@@ -192,19 +194,20 @@ const Assets = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead>Asset Name</TableHead>
+                  <TableHead>Brand</TableHead>
                   <TableHead>Serial Number</TableHead>
-                  <TableHead>Category</TableHead>
+                  <TableHead>Quantity</TableHead>
                   <TableHead>Location</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Quantity</TableHead>
-                  <TableHead>Warranty (TP)</TableHead>
+                  <TableHead>Mobility</TableHead>
+                  <TableHead>Photo</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredAssets.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center h-32 text-gray-500">
+                    <TableCell colSpan={9} className="text-center h-32 text-gray-500">
                       No assets found matching your filters
                     </TableCell>
                   </TableRow>
@@ -217,19 +220,19 @@ const Assets = () => {
                             <Box className="h-4 w-4 text-gray-600" />
                           </div>
                           <div>
-                            <div className="font-medium">{asset.name || asset.item_name}</div>
+                            <div className="font-medium">{asset.item_name}</div>
                             <div className="text-sm text-gray-500">
-                              {asset.brand_id || "No brand"}
+                              {asset.remark?.substring(0, 20) || "No description"}
+                              {asset.remark && asset.remark.length > 20 ? "..." : ""}
                             </div>
                           </div>
                         </div>
                       </TableCell>
+                      <TableCell>{asset.brand_id}</TableCell>
                       <TableCell>{asset.serial_number}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{asset.category}</Badge>
-                      </TableCell>
-                      <TableCell className="max-w-xs truncate" title={asset.location}>
-                        {asset.location_id || asset.location}
+                      <TableCell>{asset.qty_unit}</TableCell>
+                      <TableCell className="max-w-xs truncate" title={asset.location_id}>
+                        {asset.location_id}
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center">
@@ -240,13 +243,15 @@ const Assets = () => {
                           </Badge>
                         </div>
                       </TableCell>
-                      <TableCell>{asset.qty_unit || 1}</TableCell>
+                      <TableCell>{asset.asset_mobility}</TableCell>
                       <TableCell>
-                        {asset.date_warranty_tp ? 
-                          new Date(asset.date_warranty_tp).toLocaleDateString() : 
-                          asset.warrantyExpiry ?
-                          new Date(asset.warrantyExpiry).toLocaleDateString() :
-                          "N/A"}
+                        {asset.photo ? (
+                          <div className="h-8 w-8 rounded-md bg-gray-100 flex items-center justify-center">
+                            <Image className="h-4 w-4 text-gray-600" />
+                          </div>
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
                       </TableCell>
                       <TableCell className="text-right">
                         <DropdownMenu>
@@ -282,7 +287,7 @@ const Assets = () => {
           <DialogHeader>
             <DialogTitle>Confirm Deletion</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete the asset "{assetToDelete?.name}"? This action cannot be undone.
+              Are you sure you want to delete the asset "{assetToDelete?.item_name}"? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

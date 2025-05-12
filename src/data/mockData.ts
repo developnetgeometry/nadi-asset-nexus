@@ -82,16 +82,22 @@ export const mockAssets: Asset[] = [
   {
     id: "a1",
     name: "Server Rack A",
-    item_name: "Server Rack A", // Added required property
-    brand_id: "Dell", // Added required property
+    item_name: "Server Rack A",
+    brand_id: "Dell",
     description: "Main server rack for data center",
     category: "IT Infrastructure",
     type: "Server Equipment",
     model: "Dell PowerEdge R740",
     serial_number: "SRV-DELL-001",
-    qty_unit: 1, // Added required property
-    location_id: "KL-DC-101", // Added required property
-    asset_mobility: "Immovable", // Added required property
+    qty_unit: 1,
+    date_expired: "2025-01-15",
+    date_install: "2022-01-15",
+    date_warranty_tp: "2025-01-15",
+    date_warranty_supplier: "2025-01-15",
+    location_id: "Kuala Lumpur Data Center, Room 101",
+    asset_mobility: "Immovable",
+    photo: "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9",
+    remark: "Main server rack for data center operations",
     status: "ACTIVE",
     location: "Kuala Lumpur Data Center, Room 101",
     assignedTo: "u2",
@@ -105,16 +111,22 @@ export const mockAssets: Asset[] = [
   {
     id: "a2",
     name: "Network Switch",
-    item_name: "Network Switch", // Added required property
-    brand_id: "Cisco", // Added required property
+    item_name: "Network Switch",
+    brand_id: "Cisco",
     description: "Core network switch for main office",
     category: "IT Infrastructure",
     type: "Network Equipment",
     model: "Cisco Catalyst 9300",
     serial_number: "NSW-CISCO-002",
-    qty_unit: 1, // Added required property
-    location_id: "PG-SRV-01", // Added required property
-    asset_mobility: "Moveable", // Added required property
+    qty_unit: 1,
+    date_expired: "2025-02-10",
+    date_install: "2022-02-10",
+    date_warranty_tp: "2025-02-10",
+    date_warranty_supplier: "2025-02-10",
+    location_id: "Penang Office, Server Room",
+    asset_mobility: "Moveable",
+    photo: "",
+    remark: "Core switch connecting all office networks",
     status: "ACTIVE",
     location: "Penang Office, Server Room",
     assignedTo: "u2",
@@ -128,16 +140,22 @@ export const mockAssets: Asset[] = [
   {
     id: "a3",
     name: "Air Conditioning Unit",
-    item_name: "Air Conditioning Unit", // Added required property
-    brand_id: "Daikin", // Added required property
+    item_name: "Air Conditioning Unit",
+    brand_id: "Daikin",
     description: "HVAC system for server room",
     category: "Facilities",
     type: "HVAC Equipment",
     model: "Daikin VRV IV",
     serial_number: "HVAC-DAI-003",
-    qty_unit: 2, // Added required property
-    location_id: "KL-DC-101", // Added required property
-    asset_mobility: "Immovable", // Added required property
+    qty_unit: 2,
+    date_expired: "2024-11-05",
+    date_install: "2021-11-05",
+    date_warranty_tp: "2024-11-05",
+    date_warranty_supplier: "2023-11-05",
+    location_id: "Kuala Lumpur Data Center, Room 101",
+    asset_mobility: "Immovable",
+    photo: "https://images.unsplash.com/photo-1488972685288-c3fd157d7c7a",
+    remark: "Maintains optimal temperature for server operations",
     status: "UNDER_REPAIR",
     location: "Kuala Lumpur Data Center, Room 101",
     assignedTo: "u5",
@@ -151,16 +169,22 @@ export const mockAssets: Asset[] = [
   {
     id: "a4",
     name: "UPS System",
-    item_name: "UPS System", // Added required property
-    brand_id: "APC", // Added required property
+    item_name: "UPS System",
+    brand_id: "APC",
     description: "Uninterruptible Power Supply for critical systems",
     category: "Power",
     type: "Electrical Equipment",
     model: "APC Smart-UPS SRT 10kVA",
     serial_number: "UPS-APC-004",
-    qty_unit: 1, // Added required property
-    location_id: "JB-MB", // Added required property
-    asset_mobility: "Immovable", // Added required property
+    qty_unit: 1,
+    date_expired: "2025-03-20",
+    date_install: "2022-03-20",
+    date_warranty_tp: "2025-03-20",
+    date_warranty_supplier: "2024-03-20",
+    location_id: "Johor Bahru Site, Main Building",
+    asset_mobility: "Immovable",
+    photo: "",
+    remark: "Provides backup power for critical equipment",
     status: "ACTIVE",
     location: "Johor Bahru Site, Main Building",
     assignedTo: "u2",
@@ -174,16 +198,22 @@ export const mockAssets: Asset[] = [
   {
     id: "a5",
     name: "Security Camera System",
-    item_name: "Security Camera System", // Added required property
-    brand_id: "Hikvision", // Added required property
+    item_name: "Security Camera System",
+    brand_id: "Hikvision",
     description: "CCTV system for site security",
     category: "Security",
     type: "Surveillance Equipment",
     model: "Hikvision DS-2CD2T85FWD-I5",
     serial_number: "CAM-HIK-005",
-    qty_unit: 8, // Added required property
-    location_id: "KCH-PERIM", // Added required property
-    asset_mobility: "Moveable", // Added required property
+    qty_unit: 8,
+    date_expired: "2025-04-10",
+    date_install: "2022-04-10",
+    date_warranty_tp: "2025-04-10",
+    date_warranty_supplier: "2024-04-10",
+    location_id: "Kuching Site, Perimeter",
+    asset_mobility: "Moveable",
+    photo: "https://images.unsplash.com/photo-1582562124811-c09040d0a901",
+    remark: "Perimeter security monitoring system",
     status: "ACTIVE",
     location: "Kuching Site, Perimeter",
     assignedTo: "u5",
@@ -197,16 +227,22 @@ export const mockAssets: Asset[] = [
   {
     id: "a6",
     name: "Generator",
-    item_name: "Generator", // Added required property
-    brand_id: "Cummins", // Added required property
+    item_name: "Generator",
+    brand_id: "Cummins",
     description: "Backup power generator",
     category: "Power",
     type: "Electrical Equipment",
     model: "Cummins C150D5",
     serial_number: "GEN-CUM-006",
-    qty_unit: 1, // Added required property
-    location_id: "KL-DC-EXT", // Added required property
-    asset_mobility: "Immovable", // Added required property
+    qty_unit: 1,
+    date_expired: "2024-10-15",
+    date_install: "2021-10-15",
+    date_warranty_tp: "2024-10-15",
+    date_warranty_supplier: "2023-10-15",
+    location_id: "Kuala Lumpur Data Center, External",
+    asset_mobility: "Immovable",
+    photo: "https://images.unsplash.com/photo-1472396961693-142e6e269027",
+    remark: "Emergency power backup system",
     status: "ACTIVE",
     location: "Kuala Lumpur Data Center, External",
     assignedTo: "u2",
@@ -220,16 +256,22 @@ export const mockAssets: Asset[] = [
   {
     id: "a7",
     name: "Router",
-    item_name: "Router", // Added required property
-    brand_id: "Juniper", // Added required property
+    item_name: "Router",
+    brand_id: "Juniper",
     description: "Core router for network infrastructure",
     category: "IT Infrastructure",
     type: "Network Equipment",
     model: "Juniper MX240",
     serial_number: "RTR-JUN-007",
-    qty_unit: 1, // Added required property
-    location_id: "KL-STR", // Added required property
-    asset_mobility: "Moveable", // Added required property
+    qty_unit: 1,
+    date_expired: "2021-05-20",
+    date_install: "2018-05-20",
+    date_warranty_tp: "2021-05-20",
+    date_warranty_supplier: "2020-05-20",
+    location_id: "Storage, Kuala Lumpur",
+    asset_mobility: "Moveable",
+    photo: "",
+    remark: "Decommissioned core router",
     status: "RETIRED",
     location: "Storage, Kuala Lumpur",
     purchaseDate: "2018-05-20",

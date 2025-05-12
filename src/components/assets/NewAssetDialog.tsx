@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Plus } from "lucide-react";
+import { Image } from "lucide-react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -32,7 +32,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { v4 as uuidv4 } from 'uuid';
-import { mockAssets } from "../../data/mockData";
 import { Asset } from "@/types";
 import { toast } from "@/hooks/use-toast";
 
@@ -68,12 +67,13 @@ export const NewAssetDialog = ({
   onAssetAdded,
 }: NewAssetDialogProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
 
   const form = useForm<AssetFormValues>({
     resolver: zodResolver(assetFormSchema),
     defaultValues: {
       item_name: "",
-      brand_id: "",
+      brand_id: "default - None",
       serial_number: "",
       qty_unit: 1,
       location_id: "",
@@ -102,12 +102,12 @@ export const NewAssetDialog = ({
         date_warranty_supplier: values.date_warranty_supplier,
         location_id: values.location_id,
         asset_mobility: values.asset_mobility,
-        photo: values.photo,
+        photo: photoPreview || values.photo,
         remark: values.remark,
         status: values.status,
         category: values.category,
         type: values.category, // Using category as type for now
-        model: values.brand_id || undefined,
+        model: "",
         description: values.remark,
         location: values.location_id,
         purchaseDate: new Date().toISOString(),
@@ -122,9 +122,24 @@ export const NewAssetDialog = ({
       });
       
       form.reset();
+      setPhotoPreview(null);
       onOpenChange(false);
       setIsSubmitting(false);
     }, 1000);
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (event.target?.result) {
+          setPhotoPreview(event.target.result as string);
+          form.setValue('photo', 'photo-uploaded.jpg');
+        }
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   return (
@@ -139,7 +154,7 @@ export const NewAssetDialog = ({
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="item_name"
@@ -161,7 +176,7 @@ export const NewAssetDialog = ({
                   <FormItem>
                     <FormLabel>Brand</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter brand name" {...field} />
+                      <Input placeholder="default - None" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -355,7 +370,7 @@ export const NewAssetDialog = ({
                   <FormLabel>Remarks</FormLabel>
                   <FormControl>
                     <Textarea 
-                      placeholder="Enter any additional notes about the asset" 
+                      placeholder="Description of the asset (Optional)" 
                       className="resize-none" 
                       {...field} 
                     />
@@ -365,30 +380,57 @@ export const NewAssetDialog = ({
               )}
             />
 
-            {/* Photo upload would be implemented here in a real app */}
+            {/* Photo upload */}
             <FormField
               control={form.control}
               name="photo"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Photo</FormLabel>
+                  <FormLabel>Photo to upload</FormLabel>
                   <FormControl>
                     <div className="border-2 border-dashed border-gray-300 rounded-md p-6 text-center">
-                      <p className="text-sm text-gray-500">
-                        Drag and drop image here, or click to select file
-                      </p>
-                      {/* This is a placeholder - actual file upload would be implemented in a real app */}
-                      <Input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={(e) => {
-                          // Simulating photo upload URL
-                          if (e.target.files?.[0]) {
-                            field.onChange("photo-placeholder-url.jpg");
-                          }
-                        }}
-                      />
+                      {photoPreview ? (
+                        <div className="space-y-2">
+                          <img 
+                            src={photoPreview} 
+                            alt="Asset preview" 
+                            className="mx-auto h-40 w-auto object-cover rounded-md"
+                          />
+                          <Button 
+                            type="button" 
+                            variant="outline"
+                            onClick={() => {
+                              setPhotoPreview(null);
+                              field.onChange("");
+                            }}
+                          >
+                            Remove photo
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          <div className="flex justify-center">
+                            <Image className="h-12 w-12 text-gray-400" />
+                          </div>
+                          <p className="text-sm text-gray-500">
+                            Drag and drop image here, or click to select file
+                          </p>
+                          <Button 
+                            type="button" 
+                            variant="outline"
+                            onClick={() => document.getElementById('photo-upload')?.click()}
+                          >
+                            Choose photo
+                          </Button>
+                          <input
+                            id="photo-upload"
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={handleImageUpload}
+                          />
+                        </div>
+                      )}
                     </div>
                   </FormControl>
                   <FormMessage />
