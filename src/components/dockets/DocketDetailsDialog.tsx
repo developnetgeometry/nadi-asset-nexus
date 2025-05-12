@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -44,7 +43,8 @@ const DocketDetailsDialog = ({
     const role = currentUser.role;
     const status = docket.status;
     
-    const isNADIStaff = ["TP_ADMIN", "TP_OPERATION", "TP_PIC"].includes(role);
+    // Updated to include TP_SITE as NADI Staff
+    const isNADIStaff = ["TP_ADMIN", "TP_OPERATION", "TP_PIC", "TP_SITE"].includes(role);
     const isTP = ["TP_ADMIN", "TP_OPERATION"].includes(role);
     const isDUSP = ["DUSP_ADMIN", "DUSP_MANAGEMENT", "DUSP_OPERATION"].includes(role);
     
