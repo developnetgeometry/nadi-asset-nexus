@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { 
   Box, 
@@ -6,13 +5,7 @@ import {
   Search, 
   Filter, 
   Download, 
-  Edit, 
-  Trash2, 
-  ChevronDown,
-  CheckCircle,
-  AlertTriangle,
-  XCircle,
-  Image
+  Image 
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,12 +28,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { mockAssets } from "../data/mockData";
 import { Asset, AssetStatus } from "../types";
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu";
 import {
   Dialog,
   DialogContent,
@@ -51,6 +38,9 @@ import {
 } from "@/components/ui/dialog";
 import { NewAssetDialog } from "@/components/assets/NewAssetDialog";
 import { toast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { canManageAssets } from "@/config/permissions";
+import AssetActionButtons from "@/components/assets/AssetActionButtons";
 
 const Assets = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -63,6 +53,9 @@ const Assets = () => {
 
   // Get unique categories for filter dropdown
   const categories = Array.from(new Set(assets.map(asset => asset.category)));
+
+  const { currentUser } = useAuth();
+  const userCanManageAssets = currentUser ? canManageAssets(currentUser.role) : false;
 
   const getStatusIcon = (status: AssetStatus) => {
     switch (status) {
@@ -137,9 +130,11 @@ const Assets = () => {
             Manage and monitor all registered assets in the system
           </p>
         </div>
-        <Button onClick={() => setNewAssetDialogOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" /> Add New Asset
-        </Button>
+        {userCanManageAssets && (
+          <Button onClick={() => setNewAssetDialogOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" /> Add New Asset
+          </Button>
+        )}
       </div>
 
       <Card>
@@ -253,25 +248,12 @@ const Assets = () => {
                           <span className="text-gray-400">-</span>
                         )}
                       </TableCell>
-                      <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                              <span className="sr-only">Open menu</span>
-                              <ChevronDown className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem>
-                              <Edit className="mr-2 h-4 w-4" />
-                              <span>Edit</span>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleDeleteClick(asset)}>
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              <span>Delete</span>
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                      <TableCell>
+                        <AssetActionButtons 
+                          asset={asset} 
+                          onEdit={() => console.log("Edit asset", asset.id)} 
+                          onDelete={() => handleDeleteClick(asset)} 
+                        />
                       </TableCell>
                     </TableRow>
                   ))
@@ -302,11 +284,13 @@ const Assets = () => {
       </Dialog>
 
       {/* Add New Asset Dialog */}
-      <NewAssetDialog 
-        open={newAssetDialogOpen}
-        onOpenChange={setNewAssetDialogOpen}
-        onAssetAdded={handleAssetAdded}
-      />
+      {userCanManageAssets && (
+        <NewAssetDialog 
+          open={newAssetDialogOpen}
+          onOpenChange={setNewAssetDialogOpen}
+          onAssetAdded={handleAssetAdded}
+        />
+      )}
     </div>
   );
 };

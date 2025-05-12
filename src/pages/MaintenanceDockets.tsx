@@ -1,11 +1,9 @@
 import { useState, useEffect } from "react";
 import { 
-  Wrench, Plus, Search, Download, Filter, Eye, FileText, Clock, AlertTriangle,
-  CheckCircle, XCircle, CalendarDays, MessageSquare
+  Wrench, Plus, Search, Download
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { 
   Select, 
   SelectContent, 
@@ -14,7 +12,7 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { MaintenanceDocket, DocketStatus, MaintenanceType, SLACategory } from "../types";
+import { MaintenanceDocket, DocketStatus } from "../types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
@@ -29,6 +27,8 @@ import { toast } from "sonner";
 import { formatMaintenanceType, getDocketStatusClass } from "../utils/formatters";
 import DocketDetailsDialog from "../components/dockets/DocketDetailsDialog";
 import NewDocketDialog from "../components/dockets/NewDocketDialog";
+import DocketActionButtons from "../components/dockets/DocketActionButtons";
+import { canManageMaintenance } from "../config/permissions";
 
 const MaintenanceDockets = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -64,6 +64,12 @@ const MaintenanceDockets = () => {
     remarks?: string,
     estimatedDate?: string
   ) => {
+    // If user can't manage dockets, don't allow status updates
+    if (!userCanManageDockets) {
+      toast.error("You don't have permission to update docket status");
+      return;
+    }
+    
     // Get the status label for toast messages
     const statusLabels: Record<DocketStatus, string> = {
       "DRAFTED": "drafted",
@@ -132,6 +138,12 @@ const MaintenanceDockets = () => {
 
   // Function to create a new docket
   const createNewDocket = () => {
+    // Only allow if user can manage dockets
+    if (!userCanManageDockets) {
+      toast.error("You don't have permission to create new dockets");
+      return;
+    }
+    
     setIsNewDocketDialogOpen(true);
   };
 
@@ -200,9 +212,11 @@ const MaintenanceDockets = () => {
             Manage all maintenance activities and track their progress
           </p>
         </div>
-        <Button onClick={createNewDocket}>
-          <Plus className="mr-2 h-4 w-4" /> New Maintenance Request
-        </Button>
+        {userCanManageDockets && (
+          <Button onClick={createNewDocket}>
+            <Plus className="mr-2 h-4 w-4" /> New Maintenance Request
+          </Button>
+        )}
       </div>
 
       <Card>
@@ -334,24 +348,10 @@ const MaintenanceDockets = () => {
                             </div>
                           </TableCell>
                           <TableCell className="text-right">
-                            <div className="flex justify-end gap-2">
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                title="View Details"
-                                onClick={() => viewDocketDetails(docket)}
-                              >
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                              <Button variant="ghost" size="icon" title="Comments">
-                                <MessageSquare className="h-4 w-4" />
-                                {Math.floor(Math.random() * 5) > 0 && (
-                                  <span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
-                                    {Math.floor(Math.random() * 5) + 1}
-                                  </span>
-                                )}
-                              </Button>
-                            </div>
+                            <DocketActionButtons 
+                              docket={docket} 
+                              onViewDetails={viewDocketDetails} 
+                            />
                           </TableCell>
                         </TableRow>
                       ))
@@ -425,24 +425,10 @@ const MaintenanceDockets = () => {
                             </div>
                           </TableCell>
                           <TableCell className="text-right">
-                            <div className="flex justify-end gap-2">
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                title="View Details"
-                                onClick={() => viewDocketDetails(docket)}
-                              >
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                              <Button variant="ghost" size="icon" title="Comments">
-                                <MessageSquare className="h-4 w-4" />
-                                {Math.floor(Math.random() * 5) > 0 && (
-                                  <span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
-                                    {Math.floor(Math.random() * 5) + 1}
-                                  </span>
-                                )}
-                              </Button>
-                            </div>
+                            <DocketActionButtons 
+                              docket={docket} 
+                              onViewDetails={viewDocketDetails} 
+                            />
                           </TableCell>
                         </TableRow>
                       ))
@@ -516,24 +502,10 @@ const MaintenanceDockets = () => {
                             </div>
                           </TableCell>
                           <TableCell className="text-right">
-                            <div className="flex justify-end gap-2">
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                title="View Details"
-                                onClick={() => viewDocketDetails(docket)}
-                              >
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                              <Button variant="ghost" size="icon" title="Comments">
-                                <MessageSquare className="h-4 w-4" />
-                                {Math.floor(Math.random() * 5) > 0 && (
-                                  <span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
-                                    {Math.floor(Math.random() * 5) + 1}
-                                  </span>
-                                )}
-                              </Button>
-                            </div>
+                            <DocketActionButtons 
+                              docket={docket} 
+                              onViewDetails={viewDocketDetails} 
+                            />
                           </TableCell>
                         </TableRow>
                       ))
@@ -607,24 +579,10 @@ const MaintenanceDockets = () => {
                             </div>
                           </TableCell>
                           <TableCell className="text-right">
-                            <div className="flex justify-end gap-2">
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                title="View Details"
-                                onClick={() => viewDocketDetails(docket)}
-                              >
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                              <Button variant="ghost" size="icon" title="Comments">
-                                <MessageSquare className="h-4 w-4" />
-                                {Math.floor(Math.random() * 5) > 0 && (
-                                  <span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
-                                    {Math.floor(Math.random() * 5) + 1}
-                                  </span>
-                                )}
-                              </Button>
-                            </div>
+                            <DocketActionButtons 
+                              docket={docket} 
+                              onViewDetails={viewDocketDetails} 
+                            />
                           </TableCell>
                         </TableRow>
                       ))
@@ -637,19 +595,22 @@ const MaintenanceDockets = () => {
         </CardContent>
       </Card>
 
-      {/* Docket Details Dialog */}
+      {/* Docket Details Dialog with readOnly prop based on permissions */}
       <DocketDetailsDialog
         docket={selectedDocket}
         isOpen={isDetailsDialogOpen}
         onClose={() => setIsDetailsDialogOpen(false)}
         onStatusUpdate={handleDocketStatusUpdate}
+        readOnly={!userCanManageDockets}
       />
 
       {/* New Docket Dialog */}
-      <NewDocketDialog 
-        isOpen={isNewDocketDialogOpen}
-        onClose={() => setIsNewDocketDialogOpen(false)}
-      />
+      {userCanManageDockets && (
+        <NewDocketDialog 
+          isOpen={isNewDocketDialogOpen}
+          onClose={() => setIsNewDocketDialogOpen(false)}
+        />
+      )}
     </div>
   );
 };

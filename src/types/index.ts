@@ -1,30 +1,31 @@
 
-// User Roles
+// If this file already exists, make sure to add these types:
+
 export type UserRole = 
-  | 'TP_ADMIN'
-  | 'TP_OPERATION'
-  | 'TP_PIC'
-  | 'TP_SITE'
-  | 'DUSP_ADMIN'
-  | 'DUSP_MANAGEMENT'
-  | 'DUSP_OPERATION'
-  | 'MCMC_ADMIN'
-  | 'MCMC_OPERATION'
-  | 'VENDOR_ADMIN'
-  | 'VENDOR_STAFF';
+  | "MCMC_ADMIN" 
+  | "MCMC_HR" 
+  | "MCMC_OPERATION"
+  | "TP_ADMIN" 
+  | "TP_PIC" 
+  | "TP_SITE" 
+  | "TP_OPERATION"
+  | "DUSP_ADMIN" 
+  | "DUSP_OPERATION"
+  | "VENDOR_ADMIN"
+  | "VENDOR_STAFF";
 
 export const userRoleLabels: Record<UserRole, string> = {
-  TP_ADMIN: 'TP Admin',
-  TP_OPERATION: 'TP Operation',
-  TP_PIC: 'TP PIC',
-  TP_SITE: 'TP Site',
-  DUSP_ADMIN: 'DUSP Admin',
-  DUSP_MANAGEMENT: 'DUSP Management',
-  DUSP_OPERATION: 'DUSP Operation',
-  MCMC_ADMIN: 'MCMC Admin',
-  MCMC_OPERATION: 'MCMC Operation',
-  VENDOR_ADMIN: 'Vendor Admin',
-  VENDOR_STAFF: 'Vendor Staff',
+  "MCMC_ADMIN": "MCMC Administrator",
+  "MCMC_HR": "MCMC HR",
+  "MCMC_OPERATION": "MCMC Operations",
+  "TP_ADMIN": "TP Administrator",
+  "TP_PIC": "TP PIC",
+  "TP_SITE": "TP Site Manager",
+  "TP_OPERATION": "TP Operations",
+  "DUSP_ADMIN": "DUSP Administrator",
+  "DUSP_OPERATION": "DUSP Operations",
+  "VENDOR_ADMIN": "Vendor Administrator",
+  "VENDOR_STAFF": "Vendor Staff"
 };
 
 // Asset Status

@@ -1,4 +1,3 @@
-
 import { 
   LayoutDashboard, 
   Box, 
@@ -12,6 +11,15 @@ import {
 import { useState } from "react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { useAuth } from "../../contexts/AuthContext";
+import { 
+  PERFORMANCE_VIEW_ROLES, 
+  ASSET_VIEW_ONLY_ROLES, 
+  ASSET_MANAGE_ROLES,
+  MAINTENANCE_VIEW_ROLES, 
+  MAINTENANCE_MANAGE_ROLES 
+} from "../../config/permissions";
+import { UserRole } from "../../types";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -24,9 +32,20 @@ interface SidebarNavItemProps {
   label: string;
   isOpen: boolean;
   isSubItem?: boolean;
+  allowedRoles?: UserRole[];
 }
 
-const SidebarNavItem = ({ to, icon, label, isOpen, isSubItem = false }: SidebarNavItemProps) => {
+const SidebarNavItem = ({ to, icon, label, isOpen, isSubItem = false, allowedRoles = [] }: SidebarNavItemProps) => {
+  const { currentUser, checkPermission } = useAuth();
+  
+  // If no allowed roles are specified, show to everyone
+  // Otherwise, only show if the user has one of the allowed roles
+  const shouldShow = allowedRoles.length === 0 || checkPermission(allowedRoles);
+  
+  if (!shouldShow) {
+    return null;
+  }
+
   return (
     <NavLink
       to={to}
@@ -58,6 +77,14 @@ interface SidebarNavGroupProps {
 }
 
 const SidebarNavGroup = ({ title, children, isOpen }: SidebarNavGroupProps) => {
+  // Filter out null children (hidden menu items due to permissions)
+  const visibleChildren = React.Children.toArray(children).filter(child => child !== null);
+  
+  // If there are no visible children, don't render the group
+  if (visibleChildren.length === 0) {
+    return null;
+  }
+  
   return (
     <div className="mb-4">
       {isOpen && (
@@ -65,7 +92,7 @@ const SidebarNavGroup = ({ title, children, isOpen }: SidebarNavGroupProps) => {
           {title}
         </h3>
       )}
-      <div className="space-y-1">{children}</div>
+      <div className="space-y-1">{visibleChildren}</div>
     </div>
   );
 };
@@ -127,6 +154,7 @@ const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
                 icon={<Box className="h-5 w-5" />}
                 label="Assets"
                 isOpen={isOpen}
+                allowedRoles={[...ASSET_VIEW_ONLY_ROLES, ...ASSET_MANAGE_ROLES]}
               />
             </SidebarNavGroup>
 
@@ -136,6 +164,7 @@ const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
                 icon={<Wrench className="h-5 w-5" />}
                 label="Maintenance Dockets"
                 isOpen={isOpen}
+                allowedRoles={[...MAINTENANCE_VIEW_ROLES, ...MAINTENANCE_MANAGE_ROLES]}
               />
             </SidebarNavGroup>
 
@@ -145,6 +174,7 @@ const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
                 icon={<BarChart4 className="h-5 w-5" />}
                 label="Performance"
                 isOpen={isOpen}
+                allowedRoles={PERFORMANCE_VIEW_ROLES}
               />
             </SidebarNavGroup>
 
