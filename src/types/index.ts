@@ -1,3 +1,4 @@
+
 // User Roles
 export type UserRole = 
   | 'TP_ADMIN'
@@ -41,16 +42,27 @@ export type SLACategory = 'CRITICAL' | 'NORMAL' | 'LOW';
 // Docket Category
 export type DocketCategory = 'ICT' | 'ELECTRICAL' | 'PLUMBING' | 'HVAC' | 'OTHER';
 
-// Asset Interface
+// Asset Interface - Updated to match the image fields
 export interface Asset {
   id: string;
   name: string;
-  description?: string;
+  item_name: string;
+  brand_id: string;
+  serial_number: string;
+  qty_unit: number;
+  date_expired?: string;
+  date_install?: string;
+  date_warranty_tp?: string;
+  date_warranty_supplier?: string;
+  location_id: string;
+  asset_mobility: 'Moveable' | 'Immovable';
+  photo?: string;
+  remark?: string;
+  status: AssetStatus;
   category: string;
   type: string;
   model?: string;
-  serialNumber: string;
-  status: AssetStatus;
+  description?: string;
   location: string;
   assignedTo?: string;
   purchaseDate: string;

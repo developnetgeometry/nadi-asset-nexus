@@ -48,6 +48,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { NewAssetDialog } from "@/components/assets/NewAssetDialog";
+import { toast } from "@/hooks/use-toast";
 
 const Assets = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -55,9 +57,11 @@ const Assets = () => {
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [assetToDelete, setAssetToDelete] = useState<Asset | null>(null);
+  const [newAssetDialogOpen, setNewAssetDialogOpen] = useState(false);
+  const [assets, setAssets] = useState<Asset[]>(mockAssets);
 
   // Get unique categories for filter dropdown
-  const categories = Array.from(new Set(mockAssets.map(asset => asset.category)));
+  const categories = Array.from(new Set(assets.map(asset => asset.category)));
 
   const getStatusIcon = (status: AssetStatus) => {
     switch (status) {
@@ -85,11 +89,11 @@ const Assets = () => {
     }
   };
 
-  const filteredAssets = mockAssets.filter(asset => {
+  const filteredAssets = assets.filter(asset => {
     // Filter by search term
     const matchesSearch = searchTerm === "" || 
       asset.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      asset.serialNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      asset.serial_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       asset.location.toLowerCase().includes(searchTerm.toLowerCase());
       
     // Filter by status if selected
@@ -108,9 +112,19 @@ const Assets = () => {
 
   const confirmDelete = () => {
     // In a real app, this would call an API
-    console.log(`Deleting asset: ${assetToDelete?.id}`);
+    if (assetToDelete) {
+      setAssets(assets.filter(asset => asset.id !== assetToDelete.id));
+      toast({
+        title: "Asset deleted",
+        description: `${assetToDelete.name} has been removed from assets.`,
+      });
+    }
     setDeleteDialogOpen(false);
     setAssetToDelete(null);
+  };
+
+  const handleAssetAdded = (newAsset: Asset) => {
+    setAssets(prevAssets => [newAsset, ...prevAssets]);
   };
 
   return (
@@ -122,7 +136,7 @@ const Assets = () => {
             Manage and monitor all registered assets in the system
           </p>
         </div>
-        <Button>
+        <Button onClick={() => setNewAssetDialogOpen(true)}>
           <Plus className="mr-2 h-4 w-4" /> Add New Asset
         </Button>
       </div>
@@ -183,14 +197,15 @@ const Assets = () => {
                   <TableHead>Category</TableHead>
                   <TableHead>Location</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Last Maintenance</TableHead>
+                  <TableHead>Quantity</TableHead>
+                  <TableHead>Warranty (TP)</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredAssets.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center h-32 text-gray-500">
+                    <TableCell colSpan={8} className="text-center h-32 text-gray-500">
                       No assets found matching your filters
                     </TableCell>
                   </TableRow>
@@ -203,19 +218,19 @@ const Assets = () => {
                             <Box className="h-4 w-4 text-gray-600" />
                           </div>
                           <div>
-                            <div className="font-medium">{asset.name}</div>
+                            <div className="font-medium">{asset.name || asset.item_name}</div>
                             <div className="text-sm text-gray-500">
-                              {asset.model || "No model"}
+                              {asset.brand_id || "No brand"}
                             </div>
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell>{asset.serialNumber}</TableCell>
+                      <TableCell>{asset.serial_number || asset.serialNumber}</TableCell>
                       <TableCell>
                         <Badge variant="outline">{asset.category}</Badge>
                       </TableCell>
                       <TableCell className="max-w-xs truncate" title={asset.location}>
-                        {asset.location}
+                        {asset.location_id || asset.location}
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center">
@@ -226,9 +241,12 @@ const Assets = () => {
                           </Badge>
                         </div>
                       </TableCell>
+                      <TableCell>{asset.qty_unit || 1}</TableCell>
                       <TableCell>
-                        {asset.lastMaintenance ? 
-                          new Date(asset.lastMaintenance).toLocaleDateString() : 
+                        {asset.date_warranty_tp ? 
+                          new Date(asset.date_warranty_tp).toLocaleDateString() : 
+                          asset.warrantyExpiry ?
+                          new Date(asset.warrantyExpiry).toLocaleDateString() :
                           "N/A"}
                       </TableCell>
                       <TableCell className="text-right">
@@ -278,6 +296,13 @@ const Assets = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Add New Asset Dialog */}
+      <NewAssetDialog 
+        open={newAssetDialogOpen}
+        onOpenChange={setNewAssetDialogOpen}
+        onAssetAdded={handleAssetAdded}
+      />
     </div>
   );
 };
