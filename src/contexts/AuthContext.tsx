@@ -1,14 +1,45 @@
 
-import { createContext, useContext, useState, ReactNode } from "react";
-import { User, UserRole } from "../types";
+import { createContext, useContext, useState, ReactNode, useEffect } from "react";
+import { User, UserRole, MaintenanceDocket } from "../types";
 import { mockUsers } from "../data/mockData";
+import { mockDockets } from "../data/mockData";
 import { toast } from "sonner";
+
+// Create a "shared" state that simulates a backend
+const sharedDocketState = {
+  dockets: [...mockDockets], // Initialize with mock data
+  updateDocket: (updatedDocket: MaintenanceDocket) => {
+    // Find and update the docket in the shared state
+    const index = sharedDocketState.dockets.findIndex(d => d.id === updatedDocket.id);
+    if (index !== -1) {
+      sharedDocketState.dockets[index] = updatedDocket;
+      
+      // Notify all subscribers
+      sharedDocketState.subscribers.forEach(callback => callback([...sharedDocketState.dockets]));
+    }
+  },
+  subscribers: [] as ((dockets: MaintenanceDocket[]) => void)[],
+  subscribe: (callback: (dockets: MaintenanceDocket[]) => void) => {
+    sharedDocketState.subscribers.push(callback);
+    return () => {
+      const index = sharedDocketState.subscribers.indexOf(callback);
+      if (index !== -1) {
+        sharedDocketState.subscribers.splice(index, 1);
+      }
+    };
+  }
+};
 
 interface AuthContextType {
   currentUser: User | null;
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
   checkPermission: (allowedRoles: UserRole[]) => boolean;
+  sharedDockets: {
+    getDockets: () => MaintenanceDocket[];
+    updateDocket: (docket: MaintenanceDocket) => void;
+    subscribeToDockets: (callback: (dockets: MaintenanceDocket[]) => void) => () => void;
+  };
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -57,8 +88,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return allowedRoles.includes(currentUser.role);
   };
 
+  // Interface for the shared dockets state
+  const sharedDockets = {
+    getDockets: () => [...sharedDocketState.dockets],
+    updateDocket: (docket: MaintenanceDocket) => sharedDocketState.updateDocket(docket),
+    subscribeToDockets: (callback: (dockets: MaintenanceDocket[]) => void) => 
+      sharedDocketState.subscribe(callback)
+  };
+
   return (
-    <AuthContext.Provider value={{ currentUser, login, logout, checkPermission }}>
+    <AuthContext.Provider value={{ 
+      currentUser, 
+      login, 
+      logout, 
+      checkPermission,
+      sharedDockets 
+    }}>
       {children}
     </AuthContext.Provider>
   );

@@ -14,7 +14,6 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { mockDockets } from "../data/mockData";
 import { MaintenanceDocket, DocketStatus, MaintenanceType, SLACategory } from "../types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -37,15 +36,103 @@ const MaintenanceDockets = () => {
   const [currentTab, setCurrentTab] = useState("all");
   const [selectedDocket, setSelectedDocket] = useState<MaintenanceDocket | null>(null);
   const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
-  const { currentUser } = useAuth();
+  const { currentUser, sharedDockets } = useAuth();
   
-  // New state to track dockets with real-time updates
-  const [dockets, setDockets] = useState<MaintenanceDocket[]>(mockDockets);
+  // Use the shared dockets state
+  const [dockets, setDockets] = useState<MaintenanceDocket[]>(sharedDockets.getDockets());
 
-  // Initialize dockets from mock data
+  // Subscribe to docket updates
   useEffect(() => {
-    setDockets(mockDockets);
-  }, []);
+    // This will be called whenever the shared dockets state changes
+    const unsubscribe = sharedDockets.subscribeToDockets((updatedDockets) => {
+      setDockets(updatedDockets);
+      
+      // Log the update for debugging
+      console.log("Dockets updated:", updatedDockets.length);
+    });
+    
+    // Cleanup on unmount
+    return unsubscribe;
+  }, [sharedDockets]);
+
+  // Function to handle docket status update - Now uses the shared state
+  const handleDocketStatusUpdate = (
+    docketId: string, 
+    newStatus: DocketStatus, 
+    remarks?: string,
+    estimatedDate?: string
+  ) => {
+    // Get the status label for toast messages
+    const statusLabels: Record<DocketStatus, string> = {
+      "DRAFTED": "drafted",
+      "SUBMITTED": "submitted",
+      "APPROVED": "approved",
+      "REJECTED": "rejected",
+      "CLOSED": "closed",
+      "RECOMMENDED": "recommended to DUSP"
+    };
+    
+    // Find the docket to update
+    const docketToUpdate = dockets.find(d => d.id === docketId);
+    
+    if (docketToUpdate) {
+      // Create updated docket
+      const updatedDocket = {
+        ...docketToUpdate,
+        status: newStatus,
+        lastActionDate: new Date().toISOString(),
+        lastActionBy: currentUser?.name || "Current User",
+        remarks: remarks || docketToUpdate.remarks,
+        estimatedCompletionDate: estimatedDate || docketToUpdate.estimatedCompletionDate
+      };
+      
+      // Update the selected docket if it's the same one
+      if (selectedDocket && selectedDocket.id === docketId) {
+        setSelectedDocket(updatedDocket);
+      }
+      
+      // Update the shared state - this will propagate to all subscribers
+      sharedDockets.updateDocket(updatedDocket);
+      
+      // Show appropriate notifications
+      toast.success(`Docket has been ${statusLabels[newStatus]}`);
+      
+      // Additional notifications based on the flow diagram
+      switch(newStatus) {
+        case "SUBMITTED":
+          toast.info("TP has been notified about this docket");
+          break;
+        case "APPROVED":
+          if (docketToUpdate.status === "SUBMITTED") {
+            toast.info("NADI staff has been notified about approval");
+          } else if (docketToUpdate.status === "RECOMMENDED") {
+            toast.info("TP and NADI staff have been notified about DUSP approval");
+          }
+          break;
+        case "REJECTED":
+          toast.info("NADI staff has been notified about rejection");
+          break;
+        case "RECOMMENDED":
+          toast.info("DUSP has been notified about the recommended docket");
+          break;
+        case "CLOSED":
+          toast.info("TP and NADI staff have been notified about closure");
+          break;
+      }
+    }
+  };
+
+  // Function to open docket details dialog
+  const viewDocketDetails = (docket: MaintenanceDocket) => {
+    setSelectedDocket(docket);
+    setIsDetailsDialogOpen(true);
+  };
+
+  // Function to create a new docket
+  const createNewDocket = () => {
+    // In a real app, this would open a form to create a new docket
+    toast.info("Opening new maintenance request form");
+  };
 
   // Helper function to get status icon
   const getStatusIcon = (status: DocketStatus) => {
@@ -79,93 +166,6 @@ const MaintenanceDockets = () => {
       default:
         return null;
     }
-  };
-
-  // Function to handle docket status update - UPDATED to modify local state
-  const handleDocketStatusUpdate = (
-    docketId: string, 
-    newStatus: DocketStatus, 
-    remarks?: string,
-    estimatedDate?: string
-  ) => {
-    // In a real app, this would call an API to update the docket
-    // For now, we'll update our local state to reflect the change
-    
-    const statusLabels: Record<DocketStatus, string> = {
-      "DRAFTED": "drafted",
-      "SUBMITTED": "submitted",
-      "APPROVED": "approved",
-      "REJECTED": "rejected",
-      "CLOSED": "closed",
-      "RECOMMENDED": "recommended to DUSP"
-    };
-    
-    // Update the local dockets state
-    setDockets(prevDockets => 
-      prevDockets.map(docket => {
-        if (docket.id === docketId) {
-          // Also update the selectedDocket if it's the same one
-          if (selectedDocket && selectedDocket.id === docketId) {
-            setSelectedDocket({
-              ...docket,
-              status: newStatus,
-              lastActionDate: new Date().toISOString(),
-              lastActionBy: currentUser?.name || "Current User",
-              remarks: remarks || docket.remarks,
-              estimatedCompletionDate: estimatedDate || docket.estimatedCompletionDate
-            });
-          }
-          
-          // Return the updated docket
-          return {
-            ...docket,
-            status: newStatus,
-            lastActionDate: new Date().toISOString(),
-            lastActionBy: currentUser?.name || "Current User",
-            remarks: remarks || docket.remarks,
-            estimatedCompletionDate: estimatedDate || docket.estimatedCompletionDate
-          };
-        }
-        return docket;
-      })
-    );
-    
-    toast.success(`Docket has been ${statusLabels[newStatus]}`);
-    
-    // Additional notifications based on the flow diagram
-    switch(newStatus) {
-      case "SUBMITTED":
-        toast.info("TP has been notified about this docket");
-        break;
-      case "APPROVED":
-        if (selectedDocket?.status === "SUBMITTED") {
-          toast.info("NADI staff has been notified about approval");
-        } else if (selectedDocket?.status === "RECOMMENDED") {
-          toast.info("TP and NADI staff have been notified about DUSP approval");
-        }
-        break;
-      case "REJECTED":
-        toast.info("NADI staff has been notified about rejection");
-        break;
-      case "RECOMMENDED":
-        toast.info("DUSP has been notified about the recommended docket");
-        break;
-      case "CLOSED":
-        toast.info("TP and NADI staff have been notified about closure");
-        break;
-    }
-  };
-
-  // Function to open docket details dialog
-  const viewDocketDetails = (docket: MaintenanceDocket) => {
-    setSelectedDocket(docket);
-    setIsDetailsDialogOpen(true);
-  };
-
-  // Function to create a new docket
-  const createNewDocket = () => {
-    // In a real app, this would open a form to create a new docket
-    toast.info("Opening new maintenance request form");
   };
 
   // Filter dockets based on search, filters, and tab

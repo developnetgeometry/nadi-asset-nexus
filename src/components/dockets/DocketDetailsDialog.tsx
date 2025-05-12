@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -105,6 +106,9 @@ const DocketDetailsDialog = ({
             {getStatusIcon(docket.status)}
             <span>{docket.docketNo}: {docket.title}</span>
           </DialogTitle>
+          <p className="text-sm text-muted-foreground">
+            View and update maintenance docket details
+          </p>
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-4">
