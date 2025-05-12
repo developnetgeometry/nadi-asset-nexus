@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { 
   Box, 
@@ -5,7 +6,10 @@ import {
   Search, 
   Filter, 
   Download, 
-  Image 
+  Image,
+  CheckCircle,
+  AlertTriangle,
+  XCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
