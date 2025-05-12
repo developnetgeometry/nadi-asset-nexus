@@ -74,6 +74,23 @@ export default {
 					700: '#004a94',
 					800: '#003572',
 					900: '#002251',
+				},
+				cmms: {
+					50: '#f5f3ff',
+					100: '#ede9fe',
+					200: '#ddd6fe',
+					300: '#c4b5fd',
+					400: '#a78bfa',
+					500: '#8b5cf6',
+					600: '#7c3aed',
+					700: '#6d28d9',
+					800: '#5b21b6',
+					900: '#4c1d95',
+				},
+				status: {
+					operation: '#10B981',
+					progress: '#F59E0B',
+					close: '#F97316',
 				}
 			},
 			borderRadius: {

@@ -31,7 +31,7 @@ const Header = ({ toggleSidebar, userName, userRole }: HeaderProps) => {
           >
             <Menu className="h-5 w-5" />
           </Button>
-          <h1 className="text-xl font-bold text-nadi-700">NADI e-System</h1>
+          <h1 className="text-xl font-bold text-cmms-700">CMMS e-System</h1>
         </div>
 
         <div className="flex items-center space-x-3">
@@ -41,7 +41,7 @@ const Header = ({ toggleSidebar, userName, userRole }: HeaderProps) => {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="flex items-center gap-2">
                 <div className="flex items-center">
-                  <div className="h-8 w-8 rounded-full bg-nadi-500 text-white flex items-center justify-center">
+                  <div className="h-8 w-8 rounded-full bg-cmms-500 text-white flex items-center justify-center">
                     <User className="h-5 w-5" />
                   </div>
                   <div className="ml-2 text-sm text-left hidden md:block">
