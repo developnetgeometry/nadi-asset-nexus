@@ -55,7 +55,7 @@ const NewDocketForm = ({ onClose }: NewDocketFormProps) => {
       type,
       category: "ICT" as DocketCategory, // Default category
       slaCategory,
-      location,
+      location: location, // This matches the type definition in MaintenanceDocket
       submittedBy: currentUser?.name || "Unknown User",
       requestedBy: currentUser?.name || "Unknown User",
       submittedDate: new Date().toISOString(),
