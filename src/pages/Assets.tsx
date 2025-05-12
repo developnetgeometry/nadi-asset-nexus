@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { 
   Box, 
@@ -225,7 +224,7 @@ const Assets = () => {
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell>{asset.serial_number || asset.serialNumber}</TableCell>
+                      <TableCell>{asset.serial_number}</TableCell>
                       <TableCell>
                         <Badge variant="outline">{asset.category}</Badge>
                       </TableCell>

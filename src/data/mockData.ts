@@ -1,3 +1,4 @@
+
 import { Asset, MaintenanceDocket, User, MaintenanceType, DocketStatus, SLACategory, DocketCategory, AssetStatus, UserRole } from "../types";
 
 // Mock Users Data
@@ -85,7 +86,7 @@ export const mockAssets: Asset[] = [
     category: "IT Infrastructure",
     type: "Server Equipment",
     model: "Dell PowerEdge R740",
-    serialNumber: "SRV-DELL-001",
+    serial_number: "SRV-DELL-001", // Changed from serialNumber to serial_number
     status: "ACTIVE",
     location: "Kuala Lumpur Data Center, Room 101",
     assignedTo: "u2",
@@ -103,7 +104,7 @@ export const mockAssets: Asset[] = [
     category: "IT Infrastructure",
     type: "Network Equipment",
     model: "Cisco Catalyst 9300",
-    serialNumber: "NSW-CISCO-002",
+    serial_number: "NSW-CISCO-002", // Changed from serialNumber to serial_number
     status: "ACTIVE",
     location: "Penang Office, Server Room",
     assignedTo: "u2",
@@ -121,7 +122,7 @@ export const mockAssets: Asset[] = [
     category: "Facilities",
     type: "HVAC Equipment",
     model: "Daikin VRV IV",
-    serialNumber: "HVAC-DAI-003",
+    serial_number: "HVAC-DAI-003", // Changed from serialNumber to serial_number
     status: "UNDER_REPAIR",
     location: "Kuala Lumpur Data Center, Room 101",
     assignedTo: "u5",
@@ -139,7 +140,7 @@ export const mockAssets: Asset[] = [
     category: "Power",
     type: "Electrical Equipment",
     model: "APC Smart-UPS SRT 10kVA",
-    serialNumber: "UPS-APC-004",
+    serial_number: "UPS-APC-004", // Changed from serialNumber to serial_number
     status: "ACTIVE",
     location: "Johor Bahru Site, Main Building",
     assignedTo: "u2",
@@ -157,7 +158,7 @@ export const mockAssets: Asset[] = [
     category: "Security",
     type: "Surveillance Equipment",
     model: "Hikvision DS-2CD2T85FWD-I5",
-    serialNumber: "CAM-HIK-005",
+    serial_number: "CAM-HIK-005", // Changed from serialNumber to serial_number
     status: "ACTIVE",
     location: "Kuching Site, Perimeter",
     assignedTo: "u5",
@@ -175,7 +176,7 @@ export const mockAssets: Asset[] = [
     category: "Power",
     type: "Electrical Equipment",
     model: "Cummins C150D5",
-    serialNumber: "GEN-CUM-006",
+    serial_number: "GEN-CUM-006", // Changed from serialNumber to serial_number
     status: "ACTIVE",
     location: "Kuala Lumpur Data Center, External",
     assignedTo: "u2",
@@ -193,7 +194,7 @@ export const mockAssets: Asset[] = [
     category: "IT Infrastructure",
     type: "Network Equipment",
     model: "Juniper MX240",
-    serialNumber: "RTR-JUN-007",
+    serial_number: "RTR-JUN-007", // Changed from serialNumber to serial_number
     status: "RETIRED",
     location: "Storage, Kuala Lumpur",
     purchaseDate: "2018-05-20",
