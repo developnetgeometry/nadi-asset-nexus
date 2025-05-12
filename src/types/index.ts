@@ -34,7 +34,7 @@ export type AssetStatus = 'ACTIVE' | 'UNDER_REPAIR' | 'RETIRED';
 export type MaintenanceType = 'COMPREHENSIVE' | 'PREVENTIVE_SCHEDULED' | 'PREVENTIVE_UNSCHEDULED';
 
 // Docket Status
-export type DocketStatus = 'DRAFTED' | 'SUBMITTED' | 'APPROVED' | 'REJECTED' | 'CLOSED';
+export type DocketStatus = 'DRAFTED' | 'SUBMITTED' | 'APPROVED' | 'REJECTED' | 'CLOSED' | 'RECOMMENDED';
 
 // SLA Category
 export type SLACategory = 'CRITICAL' | 'NORMAL' | 'LOW';
@@ -79,6 +79,13 @@ export interface MaintenanceDocket {
   actualCompletionDate?: string;
   lastActionBy: string;
   lastActionDate: string;
+  remarks?: string;
+  attachments?: {
+    before?: string[];
+    after?: string[];
+  };
+  isOverdue?: boolean;
+  duspRecommendation?: boolean;
   createdAt: string;
   updatedAt: string;
 }

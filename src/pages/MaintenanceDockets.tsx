@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { 
   Wrench, Plus, Search, Download, Filter, Eye, FileText, Clock, AlertTriangle,
@@ -15,7 +14,7 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { mockDockets, getDocketStatusClass } from "../data/mockData";
+import { mockDockets } from "../data/mockData";
 import { MaintenanceDocket, DocketStatus, MaintenanceType, SLACategory } from "../types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -26,26 +25,19 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
+import { formatMaintenanceType, getDocketStatusClass } from "../utils/formatters";
+import DocketDetailsDialog from "../components/dockets/DocketDetailsDialog";
 
 const MaintenanceDockets = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [currentTab, setCurrentTab] = useState("all");
-
-  // Helper function to format maintenance type
-  const formatMaintenanceType = (type: MaintenanceType): string => {
-    switch (type) {
-      case "COMPREHENSIVE":
-        return "Comprehensive";
-      case "PREVENTIVE_SCHEDULED":
-        return "Preventive (Scheduled)";
-      case "PREVENTIVE_UNSCHEDULED":
-        return "Preventive (Unscheduled)";
-      default:
-        return type;
-    }
-  };
+  const [selectedDocket, setSelectedDocket] = useState<MaintenanceDocket | null>(null);
+  const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
+  const { currentUser } = useAuth();
 
   // Helper function to get status icon
   const getStatusIcon = (status: DocketStatus) => {
@@ -60,6 +52,8 @@ const MaintenanceDockets = () => {
         return <XCircle className="h-4 w-4 text-red-500" />;
       case "CLOSED":
         return <CheckCircle className="h-4 w-4 text-purple-500" />;
+      case "RECOMMENDED":
+        return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
       default:
         return null;
     }
@@ -79,6 +73,63 @@ const MaintenanceDockets = () => {
     }
   };
 
+  // Function to handle docket status update
+  const handleDocketStatusUpdate = (
+    docketId: string, 
+    newStatus: DocketStatus, 
+    remarks?: string,
+    estimatedDate?: string
+  ) => {
+    // In a real app, this would call an API to update the docket
+    // For now, we'll just show a toast notification
+    
+    const statusLabels: Record<DocketStatus, string> = {
+      "DRAFTED": "drafted",
+      "SUBMITTED": "submitted",
+      "APPROVED": "approved",
+      "REJECTED": "rejected",
+      "CLOSED": "closed",
+      "RECOMMENDED": "recommended to DUSP"
+    };
+    
+    toast.success(`Docket has been ${statusLabels[newStatus]}`);
+    
+    // Additional notifications based on the flow diagram
+    switch(newStatus) {
+      case "SUBMITTED":
+        toast.info("TP has been notified about this docket");
+        break;
+      case "APPROVED":
+        if (selectedDocket?.status === "SUBMITTED") {
+          toast.info("NADI staff has been notified about approval");
+        } else if (selectedDocket?.status === "RECOMMENDED") {
+          toast.info("TP and NADI staff have been notified about DUSP approval");
+        }
+        break;
+      case "REJECTED":
+        toast.info("NADI staff has been notified about rejection");
+        break;
+      case "RECOMMENDED":
+        toast.info("DUSP has been notified about the recommended docket");
+        break;
+      case "CLOSED":
+        toast.info("TP and NADI staff have been notified about closure");
+        break;
+    }
+  };
+
+  // Function to open docket details dialog
+  const viewDocketDetails = (docket: MaintenanceDocket) => {
+    setSelectedDocket(docket);
+    setIsDetailsDialogOpen(true);
+  };
+
+  // Function to create a new docket
+  const createNewDocket = () => {
+    // In a real app, this would open a form to create a new docket
+    toast.info("Opening new maintenance request form");
+  };
+
   // Filter dockets based on search, filters, and tab
   const filteredDockets = mockDockets.filter(docket => {
     // Filter by search term
@@ -94,7 +145,7 @@ const MaintenanceDockets = () => {
 
     // Filter by tab
     const matchesTab = currentTab === "all" || 
-      (currentTab === "open" && docket.status !== "CLOSED") ||
+      (currentTab === "open" && !["CLOSED", "REJECTED"].includes(docket.status)) ||
       (currentTab === "critical" && docket.slaCategory === "CRITICAL") ||
       (currentTab === "closed" && docket.status === "CLOSED");
     
@@ -110,7 +161,7 @@ const MaintenanceDockets = () => {
             Manage all maintenance activities and track their progress
           </p>
         </div>
-        <Button>
+        <Button onClick={createNewDocket}>
           <Plus className="mr-2 h-4 w-4" /> New Maintenance Request
         </Button>
       </div>
@@ -170,6 +221,7 @@ const MaintenanceDockets = () => {
                       <SelectItem value="SUBMITTED">Submitted</SelectItem>
                       <SelectItem value="APPROVED">Approved</SelectItem>
                       <SelectItem value="REJECTED">Rejected</SelectItem>
+                      <SelectItem value="RECOMMENDED">Recommended</SelectItem>
                       <SelectItem value="CLOSED">Closed</SelectItem>
                     </SelectContent>
                   </Select>
@@ -232,6 +284,9 @@ const MaintenanceDockets = () => {
                               <span className={`ml-2 ${getDocketStatusClass(docket.status)}`}>
                                 {docket.status.charAt(0) + docket.status.slice(1).toLowerCase()}
                               </span>
+                              {docket.isOverdue && (
+                                <Badge variant="destructive" className="ml-2">Overdue</Badge>
+                              )}
                             </div>
                           </TableCell>
                           <TableCell>
@@ -241,7 +296,12 @@ const MaintenanceDockets = () => {
                           </TableCell>
                           <TableCell className="text-right">
                             <div className="flex justify-end gap-2">
-                              <Button variant="ghost" size="icon" title="View Details">
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                title="View Details"
+                                onClick={() => viewDocketDetails(docket)}
+                              >
                                 <Eye className="h-4 w-4" />
                               </Button>
                               <Button variant="ghost" size="icon" title="Comments">
@@ -263,16 +323,84 @@ const MaintenanceDockets = () => {
             </TabsContent>
             <TabsContent value="open" className="m-0">
               {/* Same table structure as "all" tab but with pre-filtered data */}
+              <div className="rounded-md border">
+                <Table>
+                  {/* Keep table structure the same as "all" tab */}
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Docket No</TableHead>
+                      <TableHead>Title</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>SLA Category</TableHead>
+                      <TableHead>Est. Completion</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Last Action</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {/* This is automatically filtered based on the currentTab state */}
+                  </TableBody>
+                </Table>
+              </div>
             </TabsContent>
             <TabsContent value="critical" className="m-0">
               {/* Same table structure as "all" tab but with pre-filtered data */}
+              <div className="rounded-md border">
+                <Table>
+                  {/* Keep table structure the same as "all" tab */}
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Docket No</TableHead>
+                      <TableHead>Title</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>SLA Category</TableHead>
+                      <TableHead>Est. Completion</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Last Action</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {/* This is automatically filtered based on the currentTab state */}
+                  </TableBody>
+                </Table>
+              </div>
             </TabsContent>
             <TabsContent value="closed" className="m-0">
               {/* Same table structure as "all" tab but with pre-filtered data */}
+              <div className="rounded-md border">
+                <Table>
+                  {/* Keep table structure the same as "all" tab */}
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Docket No</TableHead>
+                      <TableHead>Title</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>SLA Category</TableHead>
+                      <TableHead>Est. Completion</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Last Action</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {/* This is automatically filtered based on the currentTab state */}
+                  </TableBody>
+                </Table>
+              </div>
             </TabsContent>
           </Tabs>
         </CardContent>
       </Card>
+
+      {/* Docket Details Dialog */}
+      <DocketDetailsDialog
+        docket={selectedDocket}
+        isOpen={isDetailsDialogOpen}
+        onClose={() => setIsDetailsDialogOpen(false)}
+        onStatusUpdate={handleDocketStatusUpdate}
+      />
     </div>
   );
 };
