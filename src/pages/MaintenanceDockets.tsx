@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   Wrench, Plus, Search, Download, Filter, Eye, FileText, Clock, AlertTriangle,
   CheckCircle, XCircle, CalendarDays, MessageSquare
@@ -38,6 +38,14 @@ const MaintenanceDockets = () => {
   const [selectedDocket, setSelectedDocket] = useState<MaintenanceDocket | null>(null);
   const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
   const { currentUser } = useAuth();
+  
+  // New state to track dockets with real-time updates
+  const [dockets, setDockets] = useState<MaintenanceDocket[]>(mockDockets);
+
+  // Initialize dockets from mock data
+  useEffect(() => {
+    setDockets(mockDockets);
+  }, []);
 
   // Helper function to get status icon
   const getStatusIcon = (status: DocketStatus) => {
@@ -73,7 +81,7 @@ const MaintenanceDockets = () => {
     }
   };
 
-  // Function to handle docket status update
+  // Function to handle docket status update - UPDATED to modify local state
   const handleDocketStatusUpdate = (
     docketId: string, 
     newStatus: DocketStatus, 
@@ -81,7 +89,7 @@ const MaintenanceDockets = () => {
     estimatedDate?: string
   ) => {
     // In a real app, this would call an API to update the docket
-    // For now, we'll just show a toast notification
+    // For now, we'll update our local state to reflect the change
     
     const statusLabels: Record<DocketStatus, string> = {
       "DRAFTED": "drafted",
@@ -91,6 +99,36 @@ const MaintenanceDockets = () => {
       "CLOSED": "closed",
       "RECOMMENDED": "recommended to DUSP"
     };
+    
+    // Update the local dockets state
+    setDockets(prevDockets => 
+      prevDockets.map(docket => {
+        if (docket.id === docketId) {
+          // Also update the selectedDocket if it's the same one
+          if (selectedDocket && selectedDocket.id === docketId) {
+            setSelectedDocket({
+              ...docket,
+              status: newStatus,
+              lastActionDate: new Date().toISOString(),
+              lastActionBy: currentUser?.name || "Current User",
+              remarks: remarks || docket.remarks,
+              estimatedCompletionDate: estimatedDate || docket.estimatedCompletionDate
+            });
+          }
+          
+          // Return the updated docket
+          return {
+            ...docket,
+            status: newStatus,
+            lastActionDate: new Date().toISOString(),
+            lastActionBy: currentUser?.name || "Current User",
+            remarks: remarks || docket.remarks,
+            estimatedCompletionDate: estimatedDate || docket.estimatedCompletionDate
+          };
+        }
+        return docket;
+      })
+    );
     
     toast.success(`Docket has been ${statusLabels[newStatus]}`);
     
@@ -131,7 +169,7 @@ const MaintenanceDockets = () => {
   };
 
   // Filter dockets based on search, filters, and tab
-  const filteredDockets = mockDockets.filter(docket => {
+  const filteredDockets = dockets.filter(docket => {
     // Filter by search term
     const matchesSearch = searchTerm === "" || 
       docket.docketNo.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -182,7 +220,7 @@ const MaintenanceDockets = () => {
                 <TabsTrigger value="critical">
                   Critical
                   <span className="ml-1.5 bg-red-100 text-red-800 text-xs font-semibold px-2 py-0.5 rounded">
-                    {mockDockets.filter(d => d.slaCategory === "CRITICAL").length}
+                    {dockets.filter(d => d.slaCategory === "CRITICAL").length}
                   </span>
                 </TabsTrigger>
                 <TabsTrigger value="closed">Closed</TabsTrigger>
@@ -339,7 +377,75 @@ const MaintenanceDockets = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {/* This is automatically filtered based on the currentTab state */}
+                    {filteredDockets.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={8} className="text-center h-32 text-gray-500">
+                          No maintenance dockets found matching your filters
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      filteredDockets.map((docket) => (
+                        <TableRow key={docket.id}>
+                          <TableCell>{docket.docketNo}</TableCell>
+                          <TableCell>
+                            <div>
+                              <div className="font-medium">{docket.title}</div>
+                              <div className="text-sm text-gray-500 truncate max-w-[250px]" title={docket.description}>
+                                {docket.description}
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline">
+                              {formatMaintenanceType(docket.type)}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>{getSLACategoryBadge(docket.slaCategory)}</TableCell>
+                          <TableCell>
+                            <div className="flex items-center">
+                              <CalendarDays className="h-4 w-4 text-gray-400 mr-2" />
+                              <span>{new Date(docket.estimatedCompletionDate).toLocaleDateString()}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center">
+                              {getStatusIcon(docket.status)}
+                              <span className={`ml-2 ${getDocketStatusClass(docket.status)}`}>
+                                {docket.status.charAt(0) + docket.status.slice(1).toLowerCase()}
+                              </span>
+                              {docket.isOverdue && (
+                                <Badge variant="destructive" className="ml-2">Overdue</Badge>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="text-sm text-gray-500">
+                              {new Date(docket.lastActionDate).toLocaleDateString()} by {docket.lastActionBy}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-2">
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                title="View Details"
+                                onClick={() => viewDocketDetails(docket)}
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                              <Button variant="ghost" size="icon" title="Comments">
+                                <MessageSquare className="h-4 w-4" />
+                                {Math.floor(Math.random() * 5) > 0 && (
+                                  <span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                                    {Math.floor(Math.random() * 5) + 1}
+                                  </span>
+                                )}
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
                   </TableBody>
                 </Table>
               </div>
@@ -362,7 +468,75 @@ const MaintenanceDockets = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {/* This is automatically filtered based on the currentTab state */}
+                    {filteredDockets.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={8} className="text-center h-32 text-gray-500">
+                          No maintenance dockets found matching your filters
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      filteredDockets.map((docket) => (
+                        <TableRow key={docket.id}>
+                          <TableCell>{docket.docketNo}</TableCell>
+                          <TableCell>
+                            <div>
+                              <div className="font-medium">{docket.title}</div>
+                              <div className="text-sm text-gray-500 truncate max-w-[250px]" title={docket.description}>
+                                {docket.description}
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline">
+                              {formatMaintenanceType(docket.type)}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>{getSLACategoryBadge(docket.slaCategory)}</TableCell>
+                          <TableCell>
+                            <div className="flex items-center">
+                              <CalendarDays className="h-4 w-4 text-gray-400 mr-2" />
+                              <span>{new Date(docket.estimatedCompletionDate).toLocaleDateString()}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center">
+                              {getStatusIcon(docket.status)}
+                              <span className={`ml-2 ${getDocketStatusClass(docket.status)}`}>
+                                {docket.status.charAt(0) + docket.status.slice(1).toLowerCase()}
+                              </span>
+                              {docket.isOverdue && (
+                                <Badge variant="destructive" className="ml-2">Overdue</Badge>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="text-sm text-gray-500">
+                              {new Date(docket.lastActionDate).toLocaleDateString()} by {docket.lastActionBy}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-2">
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                title="View Details"
+                                onClick={() => viewDocketDetails(docket)}
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                              <Button variant="ghost" size="icon" title="Comments">
+                                <MessageSquare className="h-4 w-4" />
+                                {Math.floor(Math.random() * 5) > 0 && (
+                                  <span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                                    {Math.floor(Math.random() * 5) + 1}
+                                  </span>
+                                )}
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
                   </TableBody>
                 </Table>
               </div>
@@ -385,7 +559,75 @@ const MaintenanceDockets = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {/* This is automatically filtered based on the currentTab state */}
+                    {filteredDockets.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={8} className="text-center h-32 text-gray-500">
+                          No maintenance dockets found matching your filters
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      filteredDockets.map((docket) => (
+                        <TableRow key={docket.id}>
+                          <TableCell>{docket.docketNo}</TableCell>
+                          <TableCell>
+                            <div>
+                              <div className="font-medium">{docket.title}</div>
+                              <div className="text-sm text-gray-500 truncate max-w-[250px]" title={docket.description}>
+                                {docket.description}
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline">
+                              {formatMaintenanceType(docket.type)}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>{getSLACategoryBadge(docket.slaCategory)}</TableCell>
+                          <TableCell>
+                            <div className="flex items-center">
+                              <CalendarDays className="h-4 w-4 text-gray-400 mr-2" />
+                              <span>{new Date(docket.estimatedCompletionDate).toLocaleDateString()}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center">
+                              {getStatusIcon(docket.status)}
+                              <span className={`ml-2 ${getDocketStatusClass(docket.status)}`}>
+                                {docket.status.charAt(0) + docket.status.slice(1).toLowerCase()}
+                              </span>
+                              {docket.isOverdue && (
+                                <Badge variant="destructive" className="ml-2">Overdue</Badge>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="text-sm text-gray-500">
+                              {new Date(docket.lastActionDate).toLocaleDateString()} by {docket.lastActionBy}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-2">
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                title="View Details"
+                                onClick={() => viewDocketDetails(docket)}
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                              <Button variant="ghost" size="icon" title="Comments">
+                                <MessageSquare className="h-4 w-4" />
+                                {Math.floor(Math.random() * 5) > 0 && (
+                                  <span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                                    {Math.floor(Math.random() * 5) + 1}
+                                  </span>
+                                )}
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
                   </TableBody>
                 </Table>
               </div>
