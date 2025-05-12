@@ -25,6 +25,10 @@ const Login = () => {
       label: "TP Operation"
     },
     {
+      email: "site@tp.example.com",
+      label: "TP Site"
+    },
+    {
       email: "rajesh@dusp.example.com",
       label: "DUSP Admin"
     },
