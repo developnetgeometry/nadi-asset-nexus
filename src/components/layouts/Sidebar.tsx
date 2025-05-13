@@ -73,9 +73,23 @@ const SidebarNavGroup = ({ title, children, isOpen }: SidebarNavGroupProps) => {
   );
 };
 
+// Define role-based permissions
+const VIEW_DASHBOARD_ROLES: UserRole[] = ["SUPER_ADMIN", "TP_ADMIN", "TP_OPERATION", "TP_PIC", "TP_SITE", "MCMC_ADMIN", "MCMC_OPERATION", "DUSP_ADMIN", "DUSP_OPERATION"];
+const VIEW_ASSETS_ROLES: UserRole[] = ["SUPER_ADMIN", "TP_ADMIN", "TP_OPERATION", "TP_PIC", "TP_SITE", "MCMC_ADMIN", "MCMC_OPERATION", "DUSP_ADMIN", "DUSP_OPERATION"];
+const VIEW_MAINTENANCE_ROLES: UserRole[] = ["SUPER_ADMIN", "TP_ADMIN", "TP_OPERATION", "TP_PIC", "TP_SITE", "MCMC_ADMIN", "MCMC_OPERATION", "DUSP_ADMIN", "DUSP_OPERATION", "VENDOR_ADMIN", "VENDOR_STAFF"];
+const VIEW_PERFORMANCE_ROLES: UserRole[] = ["SUPER_ADMIN", "TP_PIC", "TP_SITE", "MCMC_ADMIN", "MCMC_OPERATION"];
+const ASSET_SETTINGS_ROLES: UserRole[] = ["SUPER_ADMIN"];
+const SYSTEM_SETTINGS_ROLES: UserRole[] = ["SUPER_ADMIN"];
+
 const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
   const { currentUser, checkPermission } = useAuth();
-  const isSuperAdmin = currentUser?.role === "SUPER_ADMIN";
+  
+  const canViewDashboard = currentUser && checkPermission(VIEW_DASHBOARD_ROLES);
+  const canViewAssets = currentUser && checkPermission(VIEW_ASSETS_ROLES);
+  const canViewAssetSettings = currentUser && checkPermission(ASSET_SETTINGS_ROLES);
+  const canViewMaintenance = currentUser && checkPermission(VIEW_MAINTENANCE_ROLES);
+  const canViewPerformance = currentUser && checkPermission(VIEW_PERFORMANCE_ROLES);
+  const canViewSystemSettings = currentUser && checkPermission(SYSTEM_SETTINGS_ROLES);
   
   return (
     <>
@@ -118,52 +132,60 @@ const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
           </div>
 
           <nav className="flex-1 overflow-y-auto py-4">
-            <SidebarNavGroup title="Main" isOpen={isOpen}>
-              <SidebarNavItem
-                to="/"
-                icon={<LayoutDashboard className="h-5 w-5" />}
-                label="Dashboard"
-                isOpen={isOpen}
-              />
-            </SidebarNavGroup>
-
-            <SidebarNavGroup title="Asset Management" isOpen={isOpen}>
-              <SidebarNavItem
-                to="/assets"
-                icon={<Box className="h-5 w-5" />}
-                label="Assets"
-                isOpen={isOpen}
-              />
-              
-              {isSuperAdmin && (
+            {canViewDashboard && (
+              <SidebarNavGroup title="Main" isOpen={isOpen}>
                 <SidebarNavItem
-                  to="/asset-settings"
-                  icon={<Database className="h-5 w-5" />}
-                  label="Asset Settings"
+                  to="/"
+                  icon={<LayoutDashboard className="h-5 w-5" />}
+                  label="Dashboard"
                   isOpen={isOpen}
                 />
-              )}
-            </SidebarNavGroup>
+              </SidebarNavGroup>
+            )}
 
-            <SidebarNavGroup title="Maintenance" isOpen={isOpen}>
-              <SidebarNavItem
-                to="/maintenance/dockets"
-                icon={<Wrench className="h-5 w-5" />}
-                label="Maintenance Dockets"
-                isOpen={isOpen}
-              />
-            </SidebarNavGroup>
+            {canViewAssets && (
+              <SidebarNavGroup title="Asset Management" isOpen={isOpen}>
+                <SidebarNavItem
+                  to="/assets"
+                  icon={<Box className="h-5 w-5" />}
+                  label="Assets"
+                  isOpen={isOpen}
+                />
+                
+                {canViewAssetSettings && (
+                  <SidebarNavItem
+                    to="/asset-settings"
+                    icon={<Database className="h-5 w-5" />}
+                    label="Asset Settings"
+                    isOpen={isOpen}
+                  />
+                )}
+              </SidebarNavGroup>
+            )}
 
-            <SidebarNavGroup title="Reports" isOpen={isOpen}>
-              <SidebarNavItem
-                to="/performance"
-                icon={<BarChart4 className="h-5 w-5" />}
-                label="Performance"
-                isOpen={isOpen}
-              />
-            </SidebarNavGroup>
+            {canViewMaintenance && (
+              <SidebarNavGroup title="Maintenance" isOpen={isOpen}>
+                <SidebarNavItem
+                  to="/maintenance/dockets"
+                  icon={<Wrench className="h-5 w-5" />}
+                  label="Maintenance Dockets"
+                  isOpen={isOpen}
+                />
+              </SidebarNavGroup>
+            )}
 
-            {isSuperAdmin && (
+            {canViewPerformance && (
+              <SidebarNavGroup title="Reports" isOpen={isOpen}>
+                <SidebarNavItem
+                  to="/performance"
+                  icon={<BarChart4 className="h-5 w-5" />}
+                  label="Performance"
+                  isOpen={isOpen}
+                />
+              </SidebarNavGroup>
+            )}
+
+            {canViewSystemSettings && (
               <SidebarNavGroup title="Settings" isOpen={isOpen}>
                 <SidebarNavItem
                   to="/settings"

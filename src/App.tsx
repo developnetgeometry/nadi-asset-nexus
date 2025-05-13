@@ -16,11 +16,22 @@ import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { useAuth } from "./contexts/AuthContext";
+import { UserRole } from "./types";
+
+// Define role-based permissions
+const VIEW_DASHBOARD_ROLES: UserRole[] = ["SUPER_ADMIN", "TP_ADMIN", "TP_OPERATION", "TP_PIC", "TP_SITE", "MCMC_ADMIN", "MCMC_OPERATION", "DUSP_ADMIN", "DUSP_OPERATION"];
+const VIEW_ASSETS_ROLES: UserRole[] = ["SUPER_ADMIN", "TP_ADMIN", "TP_OPERATION", "TP_PIC", "TP_SITE", "MCMC_ADMIN", "MCMC_OPERATION", "DUSP_ADMIN", "DUSP_OPERATION"];
+const CRUD_ASSETS_ROLES: UserRole[] = ["SUPER_ADMIN", "TP_ADMIN", "TP_OPERATION", "TP_PIC", "TP_SITE"];
+const VIEW_MAINTENANCE_ROLES: UserRole[] = ["SUPER_ADMIN", "TP_ADMIN", "TP_OPERATION", "TP_PIC", "TP_SITE", "MCMC_ADMIN", "MCMC_OPERATION", "DUSP_ADMIN", "DUSP_OPERATION", "VENDOR_ADMIN", "VENDOR_STAFF"];
+const CRUD_MAINTENANCE_ROLES: UserRole[] = ["SUPER_ADMIN", "TP_ADMIN", "TP_OPERATION", "TP_PIC", "TP_SITE"];
+const VIEW_PERFORMANCE_ROLES: UserRole[] = ["SUPER_ADMIN", "TP_PIC", "TP_SITE", "MCMC_ADMIN", "MCMC_OPERATION"];
+const ASSET_SETTINGS_ROLES: UserRole[] = ["SUPER_ADMIN"];
+const SYSTEM_SETTINGS_ROLES: UserRole[] = ["SUPER_ADMIN"];
 
 // Role-based route component
 interface RoleBasedRouteProps {
   children: React.ReactNode;
-  allowedRoles: string[];
+  allowedRoles: UserRole[];
 }
 
 const RoleBasedRoute = ({ children, allowedRoles }: RoleBasedRouteProps) => {
@@ -30,7 +41,7 @@ const RoleBasedRoute = ({ children, allowedRoles }: RoleBasedRouteProps) => {
     return <Navigate to="/login" />;
   }
   
-  if (!allowedRoles.includes(currentUser.role)) {
+  if (!checkPermission(allowedRoles)) {
     return <Navigate to="/" />;
   }
   
@@ -55,7 +66,9 @@ const App = () => {
                 element={
                   <ProtectedRoute>
                     <AppLayout>
-                      <Dashboard />
+                      <RoleBasedRoute allowedRoles={VIEW_DASHBOARD_ROLES}>
+                        <Dashboard />
+                      </RoleBasedRoute>
                     </AppLayout>
                   </ProtectedRoute>
                 }
@@ -65,7 +78,9 @@ const App = () => {
                 element={
                   <ProtectedRoute>
                     <AppLayout>
-                      <Assets />
+                      <RoleBasedRoute allowedRoles={VIEW_ASSETS_ROLES}>
+                        <Assets />
+                      </RoleBasedRoute>
                     </AppLayout>
                   </ProtectedRoute>
                 }
@@ -75,7 +90,7 @@ const App = () => {
                 element={
                   <ProtectedRoute>
                     <AppLayout>
-                      <RoleBasedRoute allowedRoles={["SUPER_ADMIN"]}>
+                      <RoleBasedRoute allowedRoles={ASSET_SETTINGS_ROLES}>
                         <AssetSettings />
                       </RoleBasedRoute>
                     </AppLayout>
@@ -87,7 +102,9 @@ const App = () => {
                 element={
                   <ProtectedRoute>
                     <AppLayout>
-                      <MaintenanceDockets />
+                      <RoleBasedRoute allowedRoles={VIEW_MAINTENANCE_ROLES}>
+                        <MaintenanceDockets />
+                      </RoleBasedRoute>
                     </AppLayout>
                   </ProtectedRoute>
                 }
@@ -97,7 +114,9 @@ const App = () => {
                 element={
                   <ProtectedRoute>
                     <AppLayout>
-                      <Performance />
+                      <RoleBasedRoute allowedRoles={VIEW_PERFORMANCE_ROLES}>
+                        <Performance />
+                      </RoleBasedRoute>
                     </AppLayout>
                   </ProtectedRoute>
                 }
@@ -107,7 +126,7 @@ const App = () => {
                 element={
                   <ProtectedRoute>
                     <AppLayout>
-                      <RoleBasedRoute allowedRoles={["SUPER_ADMIN"]}>
+                      <RoleBasedRoute allowedRoles={SYSTEM_SETTINGS_ROLES}>
                         <Settings />
                       </RoleBasedRoute>
                     </AppLayout>
