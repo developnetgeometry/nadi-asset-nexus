@@ -9,6 +9,7 @@ import AppLayout from "./components/layouts/AppLayout";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Assets from "./pages/Assets";
+import AssetSettings from "./pages/AssetSettings";
 import MaintenanceDockets from "./pages/MaintenanceDockets";
 import Performance from "./pages/Performance";
 import Settings from "./pages/Settings";
@@ -21,7 +22,9 @@ import {
   ASSET_VIEW_ONLY_ROLES, 
   ASSET_MANAGE_ROLES,
   MAINTENANCE_VIEW_ROLES, 
-  MAINTENANCE_MANAGE_ROLES 
+  MAINTENANCE_MANAGE_ROLES,
+  SETTINGS_ACCESS_ROLES,
+  ASSET_SETTINGS_ACCESS_ROLES
 } from "./config/permissions";
 
 const App = () => {
@@ -60,6 +63,18 @@ const App = () => {
                 }
               />
               <Route
+                path="/asset-settings"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <PermissionWrapper allowedRoles={ASSET_SETTINGS_ACCESS_ROLES}>
+                        <AssetSettings />
+                      </PermissionWrapper>
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
                 path="/maintenance/dockets"
                 element={
                   <ProtectedRoute>
@@ -88,7 +103,9 @@ const App = () => {
                 element={
                   <ProtectedRoute>
                     <AppLayout>
-                      <Settings />
+                      <PermissionWrapper allowedRoles={SETTINGS_ACCESS_ROLES}>
+                        <Settings />
+                      </PermissionWrapper>
                     </AppLayout>
                   </ProtectedRoute>
                 }

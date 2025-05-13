@@ -7,7 +7,8 @@ import {
   Settings, 
   Home, 
   ChevronRight, 
-  ChevronLeft 
+  ChevronLeft,
+  Cog
 } from "lucide-react";
 import React, { useState } from "react";
 import { NavLink } from "react-router-dom";
@@ -18,7 +19,10 @@ import {
   ASSET_VIEW_ONLY_ROLES, 
   ASSET_MANAGE_ROLES,
   MAINTENANCE_VIEW_ROLES, 
-  MAINTENANCE_MANAGE_ROLES 
+  MAINTENANCE_MANAGE_ROLES,
+  SETTINGS_ACCESS_ROLES,
+  ASSET_SETTINGS_ACCESS_ROLES,
+  canAccessSettings
 } from "../../config/permissions";
 import { UserRole } from "../../types";
 
@@ -99,6 +103,8 @@ const SidebarNavGroup = ({ title, children, isOpen }: SidebarNavGroupProps) => {
 };
 
 const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
+  const { currentUser } = useAuth();
+  
   return (
     <>
       <div
@@ -157,6 +163,13 @@ const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
                 isOpen={isOpen}
                 allowedRoles={[...ASSET_VIEW_ONLY_ROLES, ...ASSET_MANAGE_ROLES]}
               />
+              <SidebarNavItem
+                to="/asset-settings"
+                icon={<Cog className="h-5 w-5" />}
+                label="Asset Settings"
+                isOpen={isOpen}
+                allowedRoles={ASSET_SETTINGS_ACCESS_ROLES}
+              />
             </SidebarNavGroup>
 
             <SidebarNavGroup title="Maintenance" isOpen={isOpen}>
@@ -179,14 +192,17 @@ const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
               />
             </SidebarNavGroup>
 
-            <SidebarNavGroup title="Settings" isOpen={isOpen}>
-              <SidebarNavItem
-                to="/settings"
-                icon={<Settings className="h-5 w-5" />}
-                label="System Settings"
-                isOpen={isOpen}
-              />
-            </SidebarNavGroup>
+            {currentUser && canAccessSettings(currentUser.role) && (
+              <SidebarNavGroup title="Settings" isOpen={isOpen}>
+                <SidebarNavItem
+                  to="/settings"
+                  icon={<Settings className="h-5 w-5" />}
+                  label="System Settings"
+                  isOpen={isOpen}
+                  allowedRoles={SETTINGS_ACCESS_ROLES}
+                />
+              </SidebarNavGroup>
+            )}
           </nav>
 
           <div className="p-4 border-t border-gray-200">

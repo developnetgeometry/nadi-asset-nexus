@@ -3,6 +3,7 @@ import { createContext, useContext, useState, ReactNode, useEffect } from "react
 import { User, UserRole, MaintenanceDocket } from "../types";
 import { mockUsers } from "../data/mockData";
 import { mockDockets } from "../data/mockData";
+import { superAdminUser } from "../data/superAdminUser";
 import { toast } from "sonner";
 import { v4 as uuid } from "uuid";
 
@@ -121,11 +122,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Simulate API call with timeout
     return new Promise((resolve) => {
       setTimeout(() => {
+        // Combine mock users with super admin user
+        const allUsers = [...mockUsers, superAdminUser];
+        
         // For demo, just look up the user by email
-        const user = mockUsers.find((u) => u.email.toLowerCase() === email.toLowerCase());
+        const user = allUsers.find((u) => u.email.toLowerCase() === email.toLowerCase());
         
         // Add debugging
-        console.log("Login attempt:", { email, foundUser: !!user, availableUsers: mockUsers.map(u => u.email) });
+        console.log("Login attempt:", { email, foundUser: !!user, availableUsers: allUsers.map(u => u.email) });
         
         if (user) {
           setCurrentUser(user);

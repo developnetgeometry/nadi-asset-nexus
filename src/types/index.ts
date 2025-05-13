@@ -12,7 +12,8 @@ export type UserRole =
   | "DUSP_ADMIN" 
   | "DUSP_OPERATION"
   | "VENDOR_ADMIN"
-  | "VENDOR_STAFF";
+  | "VENDOR_STAFF"
+  | "SUPER_ADMIN";  // Added SUPER_ADMIN role
 
 export const userRoleLabels: Record<UserRole, string> = {
   "MCMC_ADMIN": "MCMC Administrator",
@@ -25,7 +26,8 @@ export const userRoleLabels: Record<UserRole, string> = {
   "DUSP_ADMIN": "DUSP Administrator",
   "DUSP_OPERATION": "DUSP Operations",
   "VENDOR_ADMIN": "Vendor Administrator",
-  "VENDOR_STAFF": "Vendor Staff"
+  "VENDOR_STAFF": "Vendor Staff",
+  "SUPER_ADMIN": "Super Administrator"  // Added label for SUPER_ADMIN
 };
 
 // Asset Status
@@ -115,6 +117,17 @@ export interface User {
   department?: string;
   phoneNumber?: string;
   isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Asset Setting Interface
+export interface AssetSetting {
+  id: string;
+  category: string;
+  subcategories: string[];
+  brands: string[];
+  locations: string[];
   createdAt: string;
   updatedAt: string;
 }
