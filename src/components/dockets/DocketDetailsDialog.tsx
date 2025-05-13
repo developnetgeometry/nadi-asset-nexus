@@ -1,5 +1,4 @@
-
-import { MaintenanceDocket, DocketStatus, UserRole, SLACategory } from "@/types";
+import { MaintenanceDocket, DocketStatus, UserRole } from "@/types";
 import {
   Dialog,
   DialogContent,
@@ -16,8 +15,7 @@ import {
   CheckCircle, 
   XCircle, 
   AlertTriangle,
-  ArrowRight,
-  Clock
+  ArrowRight
 } from "lucide-react";
 import { 
   Select, 
@@ -160,7 +158,7 @@ const DocketDetailsDialog = ({
                 <h4 className="text-sm font-medium text-gray-500">Requestor</h4>
                 <div className="flex items-center">
                   <User className="h-4 w-4 text-gray-400 mr-2" />
-                  <span>{docket.requestedBy}</span>
+                  <span>{docket.requestor}</span>
                 </div>
               </div>
               <div>
