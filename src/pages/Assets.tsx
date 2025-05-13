@@ -63,6 +63,8 @@ const Assets = () => {
   const [assets, setAssets] = useState<Asset[]>(mockAssets);
   const [assetDetailsOpen, setAssetDetailsOpen] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
+  const [editAssetDialogOpen, setEditAssetDialogOpen] = useState(false);
+  const [assetToEdit, setAssetToEdit] = useState<Asset | null>(null);
 
   // Get unique categories for filter dropdown
   const categories = Array.from(new Set(assets.map(asset => asset.category)));
@@ -134,6 +136,27 @@ const Assets = () => {
   const handleViewAsset = (asset: Asset) => {
     setSelectedAsset(asset);
     setAssetDetailsOpen(true);
+  };
+
+  const handleEditClick = (asset: Asset) => {
+    setAssetToEdit(asset);
+    setEditAssetDialogOpen(true);
+  };
+
+  const handleAssetUpdated = (updatedAsset: Asset) => {
+    setAssets(prevAssets => 
+      prevAssets.map(asset => 
+        asset.id === updatedAsset.id ? updatedAsset : asset
+      )
+    );
+    
+    toast({
+      title: "Asset updated",
+      description: `${updatedAsset.item_name} has been successfully updated.`,
+    });
+    
+    setEditAssetDialogOpen(false);
+    setAssetToEdit(null);
   };
 
   return (
@@ -272,24 +295,24 @@ const Assets = () => {
                             <span className="sr-only">View details</span>
                             <Eye className="h-4 w-4 text-gray-500 hover:text-gray-700" />
                           </Button>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                                <span className="sr-only">Open menu</span>
-                                <ChevronDown className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem>
-                                <Edit className="mr-2 h-4 w-4" />
-                                <span>Edit</span>
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleDeleteClick(asset)}>
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                <span>Delete</span>
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0"
+                            onClick={() => handleEditClick(asset)}
+                          >
+                            <span className="sr-only">Edit asset</span>
+                            <Edit className="h-4 w-4 text-gray-500 hover:text-gray-700" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0"
+                            onClick={() => handleDeleteClick(asset)}
+                          >
+                            <span className="sr-only">Delete asset</span>
+                            <Trash2 className="h-4 w-4 text-gray-500 hover:text-gray-700" />
+                          </Button>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -326,6 +349,17 @@ const Assets = () => {
         onOpenChange={setNewAssetDialogOpen}
         onAssetAdded={handleAssetAdded}
       />
+
+      {/* Edit Asset Dialog */}
+      {assetToEdit && (
+        <NewAssetDialog 
+          open={editAssetDialogOpen}
+          onOpenChange={setEditAssetDialogOpen}
+          onAssetAdded={handleAssetUpdated}
+          assetToEdit={assetToEdit}
+          isEditing={true}
+        />
+      )}
 
       {/* Asset Details Dialog */}
       {selectedAsset && (

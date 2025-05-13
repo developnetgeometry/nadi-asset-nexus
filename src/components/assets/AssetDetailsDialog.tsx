@@ -10,6 +10,7 @@ import { Asset } from "@/types";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle, AlertTriangle, XCircle, Image } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { format } from "date-fns";
 
 interface AssetDetailsDialogProps {
   open: boolean;
@@ -41,6 +42,15 @@ export const AssetDetailsDialog = ({ open, onOpenChange, asset }: AssetDetailsDi
         return "bg-red-100 text-red-800";
       default:
         return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  const formatDate = (date: string | undefined) => {
+    if (!date) return "N/A";
+    try {
+      return format(new Date(date), "MMM dd, yyyy");
+    } catch (error) {
+      return date;
     }
   };
 
@@ -113,8 +123,43 @@ export const AssetDetailsDialog = ({ open, onOpenChange, asset }: AssetDetailsDi
               </div>
 
               <div className="space-y-2">
-                <p className="text-sm text-gray-500">Acquisition Date</p>
-                <p className="font-medium">{asset.acquisition_date || "N/A"}</p>
+                <p className="text-sm text-gray-500">Purchase Date</p>
+                <p className="font-medium">{formatDate(asset.purchaseDate)}</p>
+              </div>
+
+              <div className="space-y-2">
+                <p className="text-sm text-gray-500">Installation Date</p>
+                <p className="font-medium">{formatDate(asset.date_install)}</p>
+              </div>
+
+              <div className="space-y-2">
+                <p className="text-sm text-gray-500">Expiry Date</p>
+                <p className="font-medium">{formatDate(asset.date_expired)}</p>
+              </div>
+
+              <div className="space-y-2">
+                <p className="text-sm text-gray-500">TP Warranty Date</p>
+                <p className="font-medium">{formatDate(asset.date_warranty_tp)}</p>
+              </div>
+
+              <div className="space-y-2">
+                <p className="text-sm text-gray-500">Supplier Warranty Date</p>
+                <p className="font-medium">{formatDate(asset.date_warranty_supplier)}</p>
+              </div>
+
+              <div className="space-y-2">
+                <p className="text-sm text-gray-500">Warranty Expiry</p>
+                <p className="font-medium">{formatDate(asset.warrantyExpiry)}</p>
+              </div>
+
+              <div className="space-y-2">
+                <p className="text-sm text-gray-500">Last Maintenance</p>
+                <p className="font-medium">{formatDate(asset.lastMaintenance)}</p>
+              </div>
+
+              <div className="space-y-2">
+                <p className="text-sm text-gray-500">Next Maintenance</p>
+                <p className="font-medium">{formatDate(asset.nextMaintenance)}</p>
               </div>
             </div>
 
