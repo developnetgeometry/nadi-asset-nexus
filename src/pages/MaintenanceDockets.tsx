@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { MaintenanceDocket, DocketStatus, MaintenanceType, SLACategory } from "../types";
+import { MaintenanceDocket, DocketStatus, MaintenanceType, SLACategory, UserRole } from "../types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useAuth } from "@/contexts/AuthContext";
@@ -13,6 +13,10 @@ import { toast } from "sonner";
 import { formatMaintenanceType, getDocketStatusClass } from "../utils/formatters";
 import DocketDetailsDialog from "../components/dockets/DocketDetailsDialog";
 import NewDocketDialog from "../components/dockets/NewDocketDialog";
+
+// Define roles that can create maintenance dockets
+const CRUD_MAINTENANCE_ROLES: UserRole[] = ["SUPER_ADMIN", "TP_ADMIN", "TP_OPERATION", "TP_PIC", "TP_SITE"];
+
 const MaintenanceDockets = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState<string | null>(null);
@@ -23,8 +27,12 @@ const MaintenanceDockets = () => {
   const [isNewDocketDialogOpen, setIsNewDocketDialogOpen] = useState(false);
   const {
     currentUser,
-    sharedDockets
+    sharedDockets,
+    checkPermission
   } = useAuth();
+
+  // Check if user can create maintenance dockets
+  const canCreateDockets = checkPermission(CRUD_MAINTENANCE_ROLES);
 
   // Use the shared dockets state
   const [dockets, setDockets] = useState<MaintenanceDocket[]>(sharedDockets.getDockets());
@@ -172,9 +180,11 @@ const MaintenanceDockets = () => {
             Manage all maintenance activities and track their progress
           </p>
         </div>
-        <Button onClick={createNewDocket}>
-          <Plus className="mr-2 h-4 w-4" /> New Maintenance Request
-        </Button>
+        {canCreateDockets && (
+          <Button onClick={createNewDocket}>
+            <Plus className="mr-2 h-4 w-4" /> New Maintenance Request
+          </Button>
+        )}
       </div>
 
       <Card>
@@ -549,4 +559,5 @@ const MaintenanceDockets = () => {
       <NewDocketDialog isOpen={isNewDocketDialogOpen} onClose={() => setIsNewDocketDialogOpen(false)} />
     </div>;
 };
+
 export default MaintenanceDockets;

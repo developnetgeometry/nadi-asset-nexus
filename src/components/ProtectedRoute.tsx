@@ -7,9 +7,10 @@ import { UserRole } from "../types";
 interface ProtectedRouteProps {
   children: ReactNode;
   requiredRoles?: UserRole[];
+  createPermission?: boolean; // Add this prop to indicate if create permission is needed
 }
 
-const ProtectedRoute = ({ children, requiredRoles }: ProtectedRouteProps) => {
+const ProtectedRoute = ({ children, requiredRoles, createPermission = false }: ProtectedRouteProps) => {
   const { currentUser, checkPermission } = useAuth();
   const navigate = useNavigate();
 
