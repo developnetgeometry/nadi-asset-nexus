@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
@@ -15,6 +16,10 @@ const Login = () => {
 
   // Example emails for quick login
   const demoEmails = [
+    {
+      email: "superadmin@tp.example.com",
+      label: "Super Admin"
+    },
     {
       email: "ahmad@tp.example.com",
       label: "TP Admin"

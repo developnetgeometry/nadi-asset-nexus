@@ -1,10 +1,21 @@
-
 import { Asset, MaintenanceDocket, User, MaintenanceType, DocketStatus, SLACategory, DocketCategory, AssetStatus, UserRole } from "../types";
 
 // Mock Users Data
 export const mockUsers: User[] = [
   {
     id: "u1",
+    name: "Super Admin",
+    email: "superadmin@tp.example.com",
+    role: "SUPER_ADMIN",
+    organization: "TP Holdings",
+    department: "IT",
+    phoneNumber: "012-3456789",
+    isActive: true,
+    createdAt: "2023-01-01T00:00:00.000Z",
+    updatedAt: "2023-01-01T00:00:00.000Z"
+  },
+  {
+    id: "u2",
     name: "Ahmad Razali",
     email: "ahmad@tp.example.com",
     role: "TP_ADMIN",
@@ -16,7 +27,7 @@ export const mockUsers: User[] = [
     updatedAt: "2023-06-15T09:00:00Z"
   },
   {
-    id: "u2",
+    id: "u3",
     name: "Farah Lim",
     email: "farah@tp.example.com",
     role: "TP_OPERATION",
@@ -28,7 +39,7 @@ export const mockUsers: User[] = [
     updatedAt: "2023-06-16T10:30:00Z"
   },
   {
-    id: "u3",
+    id: "u4",
     name: "Rajesh Kumar",
     email: "rajesh@dusp.example.com",
     role: "DUSP_ADMIN",
@@ -40,7 +51,7 @@ export const mockUsers: User[] = [
     updatedAt: "2023-06-17T08:15:00Z"
   },
   {
-    id: "u4",
+    id: "u5",
     name: "Nurul Huda",
     email: "nurul@mcmc.example.com",
     role: "MCMC_ADMIN",
@@ -52,7 +63,7 @@ export const mockUsers: User[] = [
     updatedAt: "2023-06-18T14:20:00Z"
   },
   {
-    id: "u5",
+    id: "u6",
     name: "Tan Wei Ming",
     email: "tan@vendor.example.com",
     role: "VENDOR_ADMIN",
@@ -64,7 +75,7 @@ export const mockUsers: User[] = [
     updatedAt: "2023-06-19T11:45:00Z"
   },
   {
-    id: "u6",
+    id: "u7",
     name: "Site Operator",
     email: "site@tp.example.com",
     role: "TP_SITE",

@@ -8,10 +8,13 @@ import {
   Settings, 
   Home, 
   ChevronRight, 
-  ChevronLeft 
+  ChevronLeft,
+  Database
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { useAuth } from "../../contexts/AuthContext";
+import { UserRole } from "../../types";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -71,6 +74,9 @@ const SidebarNavGroup = ({ title, children, isOpen }: SidebarNavGroupProps) => {
 };
 
 const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
+  const { currentUser, checkPermission } = useAuth();
+  const isSuperAdmin = currentUser?.role === "SUPER_ADMIN";
+  
   return (
     <>
       <div
@@ -128,6 +134,15 @@ const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
                 label="Assets"
                 isOpen={isOpen}
               />
+              
+              {isSuperAdmin && (
+                <SidebarNavItem
+                  to="/asset-settings"
+                  icon={<Database className="h-5 w-5" />}
+                  label="Asset Settings"
+                  isOpen={isOpen}
+                />
+              )}
             </SidebarNavGroup>
 
             <SidebarNavGroup title="Maintenance" isOpen={isOpen}>
@@ -148,14 +163,16 @@ const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
               />
             </SidebarNavGroup>
 
-            <SidebarNavGroup title="Settings" isOpen={isOpen}>
-              <SidebarNavItem
-                to="/settings"
-                icon={<Settings className="h-5 w-5" />}
-                label="System Settings"
-                isOpen={isOpen}
-              />
-            </SidebarNavGroup>
+            {isSuperAdmin && (
+              <SidebarNavGroup title="Settings" isOpen={isOpen}>
+                <SidebarNavItem
+                  to="/settings"
+                  icon={<Settings className="h-5 w-5" />}
+                  label="System Settings"
+                  isOpen={isOpen}
+                />
+              </SidebarNavGroup>
+            )}
           </nav>
 
           <div className="p-4 border-t border-gray-200">

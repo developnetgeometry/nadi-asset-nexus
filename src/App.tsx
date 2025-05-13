@@ -9,11 +9,33 @@ import AppLayout from "./components/layouts/AppLayout";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Assets from "./pages/Assets";
+import AssetSettings from "./pages/AssetSettings";
 import MaintenanceDockets from "./pages/MaintenanceDockets";
 import Performance from "./pages/Performance";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
+import { useAuth } from "./contexts/AuthContext";
+
+// Role-based route component
+interface RoleBasedRouteProps {
+  children: React.ReactNode;
+  allowedRoles: string[];
+}
+
+const RoleBasedRoute = ({ children, allowedRoles }: RoleBasedRouteProps) => {
+  const { currentUser, checkPermission } = useAuth();
+  
+  if (!currentUser) {
+    return <Navigate to="/login" />;
+  }
+  
+  if (!allowedRoles.includes(currentUser.role)) {
+    return <Navigate to="/" />;
+  }
+  
+  return <>{children}</>;
+};
 
 const App = () => {
   // Create a new QueryClient instance inside the component
@@ -49,6 +71,18 @@ const App = () => {
                 }
               />
               <Route
+                path="/asset-settings"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <RoleBasedRoute allowedRoles={["SUPER_ADMIN"]}>
+                        <AssetSettings />
+                      </RoleBasedRoute>
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
                 path="/maintenance/dockets"
                 element={
                   <ProtectedRoute>
@@ -73,7 +107,9 @@ const App = () => {
                 element={
                   <ProtectedRoute>
                     <AppLayout>
-                      <Settings />
+                      <RoleBasedRoute allowedRoles={["SUPER_ADMIN"]}>
+                        <Settings />
+                      </RoleBasedRoute>
                     </AppLayout>
                   </ProtectedRoute>
                 }

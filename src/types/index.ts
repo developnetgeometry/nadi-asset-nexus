@@ -1,6 +1,7 @@
 
 // User Roles
 export type UserRole = 
+  | 'SUPER_ADMIN'
   | 'TP_ADMIN'
   | 'TP_OPERATION'
   | 'TP_PIC'
@@ -14,6 +15,7 @@ export type UserRole =
   | 'VENDOR_STAFF';
 
 export const userRoleLabels: Record<UserRole, string> = {
+  SUPER_ADMIN: 'Super Admin',
   TP_ADMIN: 'TP Admin',
   TP_OPERATION: 'TP Operation',
   TP_PIC: 'TP PIC',
