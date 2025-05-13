@@ -54,6 +54,7 @@ const Assets = () => {
   const [assetToDelete, setAssetToDelete] = useState<Asset | null>(null);
   const [newAssetDialogOpen, setNewAssetDialogOpen] = useState(false);
   const [assets, setAssets] = useState<Asset[]>(mockAssets);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   // Get unique categories for filter dropdown
   const categories = Array.from(new Set(assets.map(asset => asset.category)));
@@ -125,6 +126,10 @@ const Assets = () => {
     setAssets(prevAssets => [newAsset, ...prevAssets]);
   };
 
+  const toggleExpandedView = () => {
+    setIsExpanded(!isExpanded);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -185,6 +190,9 @@ const Assets = () => {
               <Button variant="outline" size="icon">
                 <Download className="h-4 w-4" />
               </Button>
+              <Button variant="outline" onClick={toggleExpandedView}>
+                {isExpanded ? "Compact View" : "Expanded View"}
+              </Button>
             </div>
           </div>
 
@@ -199,6 +207,16 @@ const Assets = () => {
                   <TableHead>Location</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Mobility</TableHead>
+                  {isExpanded && (
+                    <>
+                      <TableHead>Category</TableHead>
+                      <TableHead>Installation Date</TableHead>
+                      <TableHead>Expiry Date</TableHead>
+                      <TableHead>TP Warranty Date</TableHead>
+                      <TableHead>Supplier Warranty Date</TableHead>
+                      <TableHead>Remarks</TableHead>
+                    </>
+                  )}
                   <TableHead>Photo</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
@@ -206,7 +224,7 @@ const Assets = () => {
               <TableBody>
                 {filteredAssets.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={9} className="text-center h-32 text-gray-500">
+                    <TableCell colSpan={isExpanded ? 14 : 9} className="text-center h-32 text-gray-500">
                       No assets found matching your filters
                     </TableCell>
                   </TableRow>
@@ -243,6 +261,20 @@ const Assets = () => {
                         </div>
                       </TableCell>
                       <TableCell>{asset.asset_mobility}</TableCell>
+                      
+                      {isExpanded && (
+                        <>
+                          <TableCell>{asset.category}</TableCell>
+                          <TableCell>{asset.date_install || "-"}</TableCell>
+                          <TableCell>{asset.date_expired || "-"}</TableCell>
+                          <TableCell>{asset.date_warranty_tp || "-"}</TableCell>
+                          <TableCell>{asset.date_warranty_supplier || "-"}</TableCell>
+                          <TableCell className="max-w-xs truncate" title={asset.remark || ""}>
+                            {asset.remark || "-"}
+                          </TableCell>
+                        </>
+                      )}
+                      
                       <TableCell>
                         {asset.photo ? (
                           <div className="h-8 w-8 rounded-md bg-gray-100 flex items-center justify-center">
