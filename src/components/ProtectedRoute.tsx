@@ -7,7 +7,7 @@ import { UserRole } from "../types";
 interface ProtectedRouteProps {
   children: ReactNode;
   requiredRoles?: UserRole[];
-  createPermission?: boolean; // Add this prop to indicate if create permission is needed
+  createPermission?: boolean; // This prop indicates if create permission is needed
 }
 
 const ProtectedRoute = ({ children, requiredRoles, createPermission = false }: ProtectedRouteProps) => {
@@ -22,7 +22,14 @@ const ProtectedRoute = ({ children, requiredRoles, createPermission = false }: P
     }
   }, [currentUser, navigate, requiredRoles, checkPermission]);
 
-  return currentUser ? <>{children}</> : null;
+  if (!currentUser) return null;
+  
+  // If create permission is required but user doesn't have it, return null
+  if (createPermission && requiredRoles && !checkPermission(requiredRoles)) {
+    return null;
+  }
+
+  return <>{children}</>;
 };
 
 export default ProtectedRoute;

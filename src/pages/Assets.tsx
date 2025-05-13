@@ -34,7 +34,7 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { mockAssets } from "../data/mockData";
-import { Asset, AssetStatus } from "../types";
+import { Asset, AssetStatus, UserRole } from "../types";
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -52,8 +52,15 @@ import {
 import { NewAssetDialog } from "@/components/assets/NewAssetDialog";
 import { toast } from "@/hooks/use-toast";
 import { AssetDetailsDialog } from "@/components/assets/AssetDetailsDialog";
+import { useAuth } from "../contexts/AuthContext";
+
+// Define roles that can create/edit assets
+const CRUD_ASSETS_ROLES: UserRole[] = ["SUPER_ADMIN", "TP_ADMIN", "TP_OPERATION", "TP_PIC", "TP_SITE"];
 
 const Assets = () => {
+  const { checkPermission } = useAuth();
+  const canManageAssets = checkPermission(CRUD_ASSETS_ROLES);
+  
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
@@ -168,9 +175,11 @@ const Assets = () => {
             Manage and monitor all registered assets in the system
           </p>
         </div>
-        <Button onClick={() => setNewAssetDialogOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" /> Add New Asset
-        </Button>
+        {canManageAssets && (
+          <Button onClick={() => setNewAssetDialogOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" /> Add New Asset
+          </Button>
+        )}
       </div>
 
       <Card>
@@ -295,24 +304,28 @@ const Assets = () => {
                             <span className="sr-only">View details</span>
                             <Eye className="h-4 w-4 text-gray-500 hover:text-gray-700" />
                           </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 w-8 p-0"
-                            onClick={() => handleEditClick(asset)}
-                          >
-                            <span className="sr-only">Edit asset</span>
-                            <Edit className="h-4 w-4 text-gray-500 hover:text-gray-700" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 w-8 p-0"
-                            onClick={() => handleDeleteClick(asset)}
-                          >
-                            <span className="sr-only">Delete asset</span>
-                            <Trash2 className="h-4 w-4 text-gray-500 hover:text-gray-700" />
-                          </Button>
+                          {canManageAssets && (
+                            <>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 p-0"
+                                onClick={() => handleEditClick(asset)}
+                              >
+                                <span className="sr-only">Edit asset</span>
+                                <Edit className="h-4 w-4 text-gray-500 hover:text-gray-700" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 p-0"
+                                onClick={() => handleDeleteClick(asset)}
+                              >
+                                <span className="sr-only">Delete asset</span>
+                                <Trash2 className="h-4 w-4 text-gray-500 hover:text-gray-700" />
+                              </Button>
+                            </>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>
