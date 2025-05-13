@@ -13,16 +13,7 @@ import MaintenanceDockets from "./pages/MaintenanceDockets";
 import Performance from "./pages/Performance";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
-import NotAuthorized from "./pages/NotAuthorized";
 import ProtectedRoute from "./components/ProtectedRoute";
-import PermissionWrapper from "./components/PermissionWrapper";
-import { 
-  PERFORMANCE_VIEW_ROLES, 
-  ASSET_VIEW_ONLY_ROLES, 
-  ASSET_MANAGE_ROLES,
-  MAINTENANCE_VIEW_ROLES, 
-  MAINTENANCE_MANAGE_ROLES 
-} from "./config/permissions";
 
 const App = () => {
   // Create a new QueryClient instance inside the component
@@ -52,9 +43,7 @@ const App = () => {
                 element={
                   <ProtectedRoute>
                     <AppLayout>
-                      <PermissionWrapper allowedRoles={[...ASSET_VIEW_ONLY_ROLES, ...ASSET_MANAGE_ROLES]}>
-                        <Assets />
-                      </PermissionWrapper>
+                      <Assets />
                     </AppLayout>
                   </ProtectedRoute>
                 }
@@ -64,9 +53,7 @@ const App = () => {
                 element={
                   <ProtectedRoute>
                     <AppLayout>
-                      <PermissionWrapper allowedRoles={[...MAINTENANCE_VIEW_ROLES, ...MAINTENANCE_MANAGE_ROLES]}>
-                        <MaintenanceDockets />
-                      </PermissionWrapper>
+                      <MaintenanceDockets />
                     </AppLayout>
                   </ProtectedRoute>
                 }
@@ -76,9 +63,7 @@ const App = () => {
                 element={
                   <ProtectedRoute>
                     <AppLayout>
-                      <PermissionWrapper allowedRoles={PERFORMANCE_VIEW_ROLES}>
-                        <Performance />
-                      </PermissionWrapper>
+                      <Performance />
                     </AppLayout>
                   </ProtectedRoute>
                 }
@@ -93,7 +78,6 @@ const App = () => {
                   </ProtectedRoute>
                 }
               />
-              <Route path="/not-authorized" element={<NotAuthorized />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
