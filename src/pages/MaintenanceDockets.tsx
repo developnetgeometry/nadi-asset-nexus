@@ -1,6 +1,7 @@
+
 import { useState, useEffect } from "react";
 import { 
-  Wrench, Plus, Search, Download
+  Wrench, Plus, Search, Download, FileText, Clock, CheckCircle, XCircle, AlertTriangle, CalendarDays
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,7 +13,7 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { MaintenanceDocket, DocketStatus } from "../types";
+import { MaintenanceDocket, DocketStatus, SLACategory } from "../types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
@@ -22,6 +23,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { formatMaintenanceType, getDocketStatusClass } from "../utils/formatters";
@@ -39,6 +41,9 @@ const MaintenanceDockets = () => {
   const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
   const [isNewDocketDialogOpen, setIsNewDocketDialogOpen] = useState(false);
   const { currentUser, sharedDockets } = useAuth();
+  
+  // Define userCanManageDockets variable here
+  const userCanManageDockets = currentUser ? canManageMaintenance(currentUser.role) : false;
   
   // Use the shared dockets state
   const [dockets, setDockets] = useState<MaintenanceDocket[]>(sharedDockets.getDockets());
