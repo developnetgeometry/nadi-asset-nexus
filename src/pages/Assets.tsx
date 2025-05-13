@@ -54,7 +54,10 @@ const Assets = () => {
   const [assetToDelete, setAssetToDelete] = useState<Asset | null>(null);
   const [newAssetDialogOpen, setNewAssetDialogOpen] = useState(false);
   const [assets, setAssets] = useState<Asset[]>(mockAssets);
-  const [isExpanded, setIsExpanded] = useState(false);
+  
+  // Add state for the view details dialog
+  const [viewDetailsDialogOpen, setViewDetailsDialogOpen] = useState(false);
+  const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
 
   // Get unique categories for filter dropdown
   const categories = Array.from(new Set(assets.map(asset => asset.category)));
@@ -125,9 +128,10 @@ const Assets = () => {
   const handleAssetAdded = (newAsset: Asset) => {
     setAssets(prevAssets => [newAsset, ...prevAssets]);
   };
-
-  const toggleExpandedView = () => {
-    setIsExpanded(!isExpanded);
+  
+  const handleViewDetails = (asset: Asset) => {
+    setSelectedAsset(asset);
+    setViewDetailsDialogOpen(true);
   };
 
   return (
@@ -190,9 +194,6 @@ const Assets = () => {
               <Button variant="outline" size="icon">
                 <Download className="h-4 w-4" />
               </Button>
-              <Button variant="outline" onClick={toggleExpandedView}>
-                {isExpanded ? "Compact View" : "Expanded View"}
-              </Button>
             </div>
           </div>
 
@@ -207,16 +208,6 @@ const Assets = () => {
                   <TableHead>Location</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Mobility</TableHead>
-                  {isExpanded && (
-                    <>
-                      <TableHead>Category</TableHead>
-                      <TableHead>Installation Date</TableHead>
-                      <TableHead>Expiry Date</TableHead>
-                      <TableHead>TP Warranty Date</TableHead>
-                      <TableHead>Supplier Warranty Date</TableHead>
-                      <TableHead>Remarks</TableHead>
-                    </>
-                  )}
                   <TableHead>Photo</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
@@ -224,7 +215,7 @@ const Assets = () => {
               <TableBody>
                 {filteredAssets.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={isExpanded ? 14 : 9} className="text-center h-32 text-gray-500">
+                    <TableCell colSpan={9} className="text-center h-32 text-gray-500">
                       No assets found matching your filters
                     </TableCell>
                   </TableRow>
@@ -261,20 +252,6 @@ const Assets = () => {
                         </div>
                       </TableCell>
                       <TableCell>{asset.asset_mobility}</TableCell>
-                      
-                      {isExpanded && (
-                        <>
-                          <TableCell>{asset.category}</TableCell>
-                          <TableCell>{asset.date_install || "-"}</TableCell>
-                          <TableCell>{asset.date_expired || "-"}</TableCell>
-                          <TableCell>{asset.date_warranty_tp || "-"}</TableCell>
-                          <TableCell>{asset.date_warranty_supplier || "-"}</TableCell>
-                          <TableCell className="max-w-xs truncate" title={asset.remark || ""}>
-                            {asset.remark || "-"}
-                          </TableCell>
-                        </>
-                      )}
-                      
                       <TableCell>
                         {asset.photo ? (
                           <div className="h-8 w-8 rounded-md bg-gray-100 flex items-center justify-center">
@@ -288,7 +265,8 @@ const Assets = () => {
                         <AssetActionButtons 
                           asset={asset} 
                           onEdit={() => console.log("Edit asset", asset.id)} 
-                          onDelete={() => handleDeleteClick(asset)} 
+                          onDelete={() => handleDeleteClick(asset)}
+                          onView={() => handleViewDetails(asset)}
                         />
                       </TableCell>
                     </TableRow>
@@ -300,6 +278,7 @@ const Assets = () => {
         </CardContent>
       </Card>
 
+      {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -314,6 +293,110 @@ const Assets = () => {
             </Button>
             <Button variant="destructive" onClick={confirmDelete}>
               Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Asset Details Dialog */}
+      <Dialog open={viewDetailsDialogOpen} onOpenChange={setViewDetailsDialogOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Asset Details</DialogTitle>
+            <DialogDescription>
+              Detailed information about the selected asset.
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedAsset && (
+            <div className="grid grid-cols-2 gap-4 py-4">
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-gray-500">Asset Name</p>
+                <p className="text-sm">{selectedAsset.item_name}</p>
+              </div>
+              
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-gray-500">Brand</p>
+                <p className="text-sm">{selectedAsset.brand_id}</p>
+              </div>
+              
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-gray-500">Serial Number</p>
+                <p className="text-sm">{selectedAsset.serial_number || "-"}</p>
+              </div>
+              
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-gray-500">Quantity / Unit</p>
+                <p className="text-sm">{selectedAsset.qty_unit || "-"}</p>
+              </div>
+              
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-gray-500">Location</p>
+                <p className="text-sm">{selectedAsset.location_id}</p>
+              </div>
+              
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-gray-500">Status</p>
+                <div className="flex items-center">
+                  {getStatusIcon(selectedAsset.status)}
+                  <Badge className={`ml-2 ${getStatusColor(selectedAsset.status)}`}>
+                    {selectedAsset.status === "ACTIVE" ? "Active" : 
+                     selectedAsset.status === "UNDER_REPAIR" ? "Under Repair" : "Retired"}
+                  </Badge>
+                </div>
+              </div>
+              
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-gray-500">Mobility</p>
+                <p className="text-sm">{selectedAsset.asset_mobility}</p>
+              </div>
+              
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-gray-500">Category</p>
+                <p className="text-sm">{selectedAsset.category}</p>
+              </div>
+              
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-gray-500">Installation Date</p>
+                <p className="text-sm">{selectedAsset.date_install || "-"}</p>
+              </div>
+              
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-gray-500">Expiry Date</p>
+                <p className="text-sm">{selectedAsset.date_expired || "-"}</p>
+              </div>
+              
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-gray-500">TP Warranty Date</p>
+                <p className="text-sm">{selectedAsset.date_warranty_tp || "-"}</p>
+              </div>
+              
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-gray-500">Supplier Warranty Date</p>
+                <p className="text-sm">{selectedAsset.date_warranty_supplier || "-"}</p>
+              </div>
+              
+              <div className="space-y-1 col-span-2">
+                <p className="text-sm font-medium text-gray-500">Remarks</p>
+                <p className="text-sm">{selectedAsset.remark || "-"}</p>
+              </div>
+              
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-gray-500">Photo</p>
+                {selectedAsset.photo ? (
+                  <div className="h-20 w-20 rounded-md bg-gray-100 flex items-center justify-center">
+                    <Image className="h-8 w-8 text-gray-600" />
+                  </div>
+                ) : (
+                  <p className="text-sm">-</p>
+                )}
+              </div>
+            </div>
+          )}
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setViewDetailsDialogOpen(false)}>
+              Close
             </Button>
           </DialogFooter>
         </DialogContent>
