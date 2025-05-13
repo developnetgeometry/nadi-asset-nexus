@@ -1,6 +1,9 @@
+
 import { useState, useEffect } from "react";
 import { 
-  Wrench, Plus, Search, Download
+  Wrench, Plus, Search, Download,
+  CheckCircle, XCircle, FileText, Clock, 
+  AlertTriangle, CalendarDays
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,7 +15,7 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { MaintenanceDocket, DocketStatus } from "../types";
+import { MaintenanceDocket, DocketStatus, SLACategory } from "../types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
@@ -29,6 +32,7 @@ import DocketDetailsDialog from "../components/dockets/DocketDetailsDialog";
 import NewDocketDialog from "../components/dockets/NewDocketDialog";
 import DocketActionButtons from "../components/dockets/DocketActionButtons";
 import { canManageMaintenance } from "../config/permissions";
+import { Badge } from "@/components/ui/badge";
 
 const MaintenanceDockets = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -39,6 +43,9 @@ const MaintenanceDockets = () => {
   const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
   const [isNewDocketDialogOpen, setIsNewDocketDialogOpen] = useState(false);
   const { currentUser, sharedDockets } = useAuth();
+  
+  // Define userCanManageDockets based on current user's permissions
+  const userCanManageDockets = currentUser ? canManageMaintenance(currentUser.role) : false;
   
   // Use the shared dockets state
   const [dockets, setDockets] = useState<MaintenanceDocket[]>(sharedDockets.getDockets());
