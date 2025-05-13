@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { 
   Box, 
@@ -12,7 +11,8 @@ import {
   CheckCircle,
   AlertTriangle,
   XCircle,
-  Image
+  Image,
+  Eye
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -51,6 +51,7 @@ import {
 } from "@/components/ui/dialog";
 import { NewAssetDialog } from "@/components/assets/NewAssetDialog";
 import { toast } from "@/hooks/use-toast";
+import { AssetDetailsDialog } from "@/components/assets/AssetDetailsDialog";
 
 const Assets = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -60,6 +61,8 @@ const Assets = () => {
   const [assetToDelete, setAssetToDelete] = useState<Asset | null>(null);
   const [newAssetDialogOpen, setNewAssetDialogOpen] = useState(false);
   const [assets, setAssets] = useState<Asset[]>(mockAssets);
+  const [assetDetailsOpen, setAssetDetailsOpen] = useState(false);
+  const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
 
   // Get unique categories for filter dropdown
   const categories = Array.from(new Set(assets.map(asset => asset.category)));
@@ -126,6 +129,11 @@ const Assets = () => {
 
   const handleAssetAdded = (newAsset: Asset) => {
     setAssets(prevAssets => [newAsset, ...prevAssets]);
+  };
+
+  const handleViewAsset = (asset: Asset) => {
+    setSelectedAsset(asset);
+    setAssetDetailsOpen(true);
   };
 
   return (
@@ -254,24 +262,35 @@ const Assets = () => {
                         )}
                       </TableCell>
                       <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                              <span className="sr-only">Open menu</span>
-                              <ChevronDown className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem>
-                              <Edit className="mr-2 h-4 w-4" />
-                              <span>Edit</span>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleDeleteClick(asset)}>
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              <span>Delete</span>
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                        <div className="flex justify-end items-center space-x-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0"
+                            onClick={() => handleViewAsset(asset)}
+                          >
+                            <span className="sr-only">View details</span>
+                            <Eye className="h-4 w-4 text-gray-500 hover:text-gray-700" />
+                          </Button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                <span className="sr-only">Open menu</span>
+                                <ChevronDown className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem>
+                                <Edit className="mr-2 h-4 w-4" />
+                                <span>Edit</span>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleDeleteClick(asset)}>
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                <span>Delete</span>
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))
@@ -307,6 +326,15 @@ const Assets = () => {
         onOpenChange={setNewAssetDialogOpen}
         onAssetAdded={handleAssetAdded}
       />
+
+      {/* Asset Details Dialog */}
+      {selectedAsset && (
+        <AssetDetailsDialog
+          open={assetDetailsOpen}
+          onOpenChange={setAssetDetailsOpen}
+          asset={selectedAsset}
+        />
+      )}
     </div>
   );
 };
