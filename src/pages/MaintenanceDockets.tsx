@@ -16,7 +16,6 @@ import NewDocketDialog from "../components/dockets/NewDocketDialog";
 
 // Define roles that can create maintenance dockets
 const CRUD_MAINTENANCE_ROLES: UserRole[] = ["SUPER_ADMIN", "TP_ADMIN", "TP_OPERATION", "TP_PIC", "TP_SITE"];
-
 const MaintenanceDockets = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState<string | null>(null);
@@ -180,11 +179,9 @@ const MaintenanceDockets = () => {
             Manage all maintenance activities and track their progress
           </p>
         </div>
-        {canCreateDockets && (
-          <Button onClick={createNewDocket}>
+        {canCreateDockets && <Button onClick={createNewDocket}>
             <Plus className="mr-2 h-4 w-4" /> New Maintenance Request
-          </Button>
-        )}
+          </Button>}
       </div>
 
       <Card>
@@ -309,9 +306,7 @@ const MaintenanceDockets = () => {
                               </Button>
                               <Button variant="ghost" size="icon" title="Comments">
                                 <MessageSquare className="h-4 w-4" />
-                                {Math.floor(Math.random() * 5) > 0 && <span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
-                                    {Math.floor(Math.random() * 5) + 1}
-                                  </span>}
+                                {Math.floor(Math.random() * 5) > 0}
                               </Button>
                             </div>
                           </TableCell>
@@ -559,5 +554,4 @@ const MaintenanceDockets = () => {
       <NewDocketDialog isOpen={isNewDocketDialogOpen} onClose={() => setIsNewDocketDialogOpen(false)} />
     </div>;
 };
-
 export default MaintenanceDockets;
