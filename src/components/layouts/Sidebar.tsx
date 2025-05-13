@@ -1,4 +1,5 @@
 
+import React, { useState } from "react";
 import { 
   LayoutDashboard, 
   Box, 
@@ -9,7 +10,6 @@ import {
   ChevronRight, 
   ChevronLeft 
 } from "lucide-react";
-import { useState } from "react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
