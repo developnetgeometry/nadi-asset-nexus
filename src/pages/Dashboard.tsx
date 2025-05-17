@@ -1,5 +1,5 @@
 
-import { BarChart4, Box, CheckCircle, Clock, AlertCircle, Wrench, Search, Filter, Download, Eye, Settings, Trash2, Plus } from "lucide-react";
+import { BarChart4, Box, CheckCircle, Clock, AlertCircle, Wrench, Search, Filter, Download, Eye, Settings, Trash2, Plus, ArrowLeft } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "../contexts/AuthContext";
 import { mockKPIStats, mockAssets } from "../data/mockData";
@@ -36,27 +36,42 @@ const Dashboard = () => {
   
   // Filtering state
   const [searchTerm, setSearchTerm] = useState("");
-  const [typeFilter, setTypeFilter] = useState<string | null>(null);
   
+  // Get unique sites from assets
+  const sites = Array.from(new Set(mockAssets.map(asset => asset.location_id)));
+  
+  // Get site statistics by location
+  const siteStatistics = sites.map(site => {
+    const siteAssets = mockAssets.filter(asset => asset.location_id === site);
+    const totalAssets = siteAssets.length;
+    const activeAssets = siteAssets.filter(asset => asset.status === "ACTIVE").length;
+    const underRepairAssets = siteAssets.filter(asset => asset.status === "UNDER_REPAIR").length;
+    
+    // Find a sample asset to get the state information
+    const sampleAsset = siteAssets[0];
+    
+    return {
+      siteId: site,
+      name: site,
+      state: sampleAsset?.state || 'Unknown',
+      totalAssets,
+      activeAssets,
+      underRepairAssets
+    };
+  });
+
+  // Filter sites based on search term
+  const filteredSites = siteStatistics.filter(site => 
+    site.siteId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    site.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    site.state.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   // Filter assets based on selected site
   const siteAssets = selectedSite 
     ? mockAssets.filter(asset => asset.location_id === selectedSite)
     : mockAssets;
 
-  // Filter assets for display
-  const filteredAssets = siteAssets.filter(asset => {
-    const matchesSearch = searchTerm === "" || 
-      asset.item_name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      asset.serial_number?.toLowerCase().includes(searchTerm.toLowerCase());
-      
-    const matchesType = typeFilter === null || asset.category === typeFilter;
-
-    return matchesSearch && matchesType;
-  });
-
-  // Get unique categories for filter dropdown
-  const categories = Array.from(new Set(siteAssets.map(asset => asset.category)));
-  
   // Count assets by status (for all assets)
   const totalAssets = mockAssets.length;
   const activeAssets = mockAssets.filter(asset => asset.status === "ACTIVE").length;
@@ -76,6 +91,11 @@ const Dashboard = () => {
     setSelectedSite(site);
     setShowSiteSelector(false);
   };
+  
+  const handleBackToSites = () => {
+    setShowSiteSelector(true);
+    setSelectedSite(null);
+  };
 
   // Effect to reset the site selector when the user logs in
   useEffect(() => {
@@ -94,7 +114,7 @@ const Dashboard = () => {
             Manage and monitor all registered assets in the system
           </p>
         </div>
-        {canManageAssets && (
+        {canManageAssets && !showSiteSelector && (
           <Button className="bg-indigo-600 hover:bg-indigo-700">
             <Plus className="mr-2 h-4 w-4" /> Add New Asset
           </Button>
@@ -103,8 +123,6 @@ const Dashboard = () => {
 
       {/* Site Selector for Admin Roles */}
       {isAdmin && showSiteSelector ? (
-        <SiteSelector onSiteSelect={handleSiteSelect} />
-      ) : (
         <>
           {/* Summary Cards - Show totals for all assets */}
           <div className="grid gap-6 md:grid-cols-3">
@@ -144,6 +162,99 @@ const Dashboard = () => {
               </CardContent>
             </Card>
           </div>
+
+          {/* Sites Table */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Nadi Sites</CardTitle>
+              <CardDescription>
+                Select a site to view its assets
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col sm:flex-row gap-4 mb-6">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input 
+                    className="pl-10" 
+                    placeholder="Search sites..." 
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="icon">
+                    <Download className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[60px]">No.</TableHead>
+                      <TableHead>Site ID</TableHead>
+                      <TableHead>Name</TableHead>
+                      <TableHead>State</TableHead>
+                      <TableHead>Total Assets</TableHead>
+                      <TableHead>Active Assets</TableHead>
+                      <TableHead>Under Maintenance</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredSites.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={8} className="text-center h-32 text-gray-500">
+                          No sites found matching your filters
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      filteredSites.map((site, index) => (
+                        <TableRow key={site.siteId}>
+                          <TableCell>{index + 1}</TableCell>
+                          <TableCell>{site.siteId}</TableCell>
+                          <TableCell>{site.name}</TableCell>
+                          <TableCell>{site.state}</TableCell>
+                          <TableCell>{site.totalAssets}</TableCell>
+                          <TableCell>
+                            <span className="text-green-600 font-medium">{site.activeAssets}</span>
+                          </TableCell>
+                          <TableCell>
+                            <span className="text-red-600 font-medium">{site.underRepairAssets}</span>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex justify-end items-center space-x-1">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 w-8 p-0 rounded-md border-indigo-200"
+                                onClick={() => handleSiteSelect(site.siteId)}
+                              >
+                                <Eye className="h-4 w-4 text-indigo-600" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        </>
+      ) : (
+        <>
+          {/* Back button */}
+          <Button 
+            variant="outline" 
+            className="mb-4 flex items-center gap-2"
+            onClick={handleBackToSites}
+          >
+            <ArrowLeft className="h-4 w-4" /> Back to Sites
+          </Button>
 
           {/* If a site is selected, show site-specific stats */}
           {selectedSite && (
@@ -200,20 +311,6 @@ const Dashboard = () => {
                   />
                 </div>
                 <div className="flex gap-2">
-                  <Select onValueChange={(value) => setTypeFilter(value === "All Types" ? null : value)}>
-                    <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="All Types" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="All Types">All Types</SelectItem>
-                      {categories.map((category) => (
-                        <SelectItem key={category} value={category}>
-                          {category}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  
                   <Button variant="outline" size="icon">
                     <Download className="h-4 w-4" />
                   </Button>
@@ -228,27 +325,25 @@ const Dashboard = () => {
                       <TableHead>Item Name</TableHead>
                       <TableHead>Type</TableHead>
                       <TableHead>Quantity</TableHead>
-                      <TableHead>Nadi Centre</TableHead>
                       <TableHead>Request Date</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredAssets.length === 0 ? (
+                    {siteAssets.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={8} className="text-center h-32 text-gray-500">
-                          No assets found matching your filters
+                          No assets found for this site
                         </TableCell>
                       </TableRow>
                     ) : (
-                      filteredAssets.map((asset, index) => (
+                      siteAssets.map((asset, index) => (
                         <TableRow key={asset.id}>
                           <TableCell>{index + 1}</TableCell>
                           <TableCell>{asset.item_name}</TableCell>
                           <TableCell>{asset.category}</TableCell>
                           <TableCell>{asset.qty_unit}</TableCell>
-                          <TableCell>{asset.location_id}</TableCell>
                           <TableCell>{asset.createdAt ? new Date(asset.createdAt).toLocaleDateString() : "N/A"}</TableCell>
                           <TableCell>
                             <Badge className={
@@ -271,26 +366,6 @@ const Dashboard = () => {
                               >
                                 <Eye className="h-4 w-4 text-indigo-600" />
                               </Button>
-                              
-                              {canManageAssets && (
-                                <>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="h-8 w-8 p-0 rounded-md border-indigo-200"
-                                  >
-                                    <Settings className="h-4 w-4 text-indigo-600" />
-                                  </Button>
-                                  
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="h-8 w-8 p-0 rounded-md border-indigo-200"
-                                  >
-                                    <Trash2 className="h-4 w-4 text-indigo-600" />
-                                  </Button>
-                                </>
-                              )}
                             </div>
                           </TableCell>
                         </TableRow>
