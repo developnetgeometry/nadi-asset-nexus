@@ -20,6 +20,17 @@ const CRUD_MAINTENANCE_ROLES: UserRole[] = ["SUPER_ADMIN", "TP_ADMIN", "TP_OPERA
 // Define admin roles that need to select a site
 const ADMIN_ROLES: UserRole[] = ["SUPER_ADMIN", "TP_ADMIN", "TP_OPERATION"];
 
+// Helper function to calculate metrics for a site
+const calculateSiteMetrics = (dockets: MaintenanceDocket[], siteId: string) => {
+  const siteDockets = dockets.filter(docket => docket.siteId === siteId);
+  return {
+    total: siteDockets.length,
+    open: siteDockets.filter(d => !["CLOSED", "REJECTED"].includes(d.status)).length,
+    critical: siteDockets.filter(d => d.slaCategory === "CRITICAL").length,
+    name: `Site ${siteId}` // This would be replaced with actual site names in a real system
+  };
+};
+
 const MaintenanceDockets = () => {
   const { siteId } = useParams<{ siteId: string }>();
   const navigate = useNavigate();
@@ -43,6 +54,37 @@ const MaintenanceDockets = () => {
 
   // Use the shared dockets state
   const [dockets, setDockets] = useState<MaintenanceDocket[]>(sharedDockets.getDockets());
+  
+  // Group dockets by site and calculate metrics
+  const siteMetrics = dockets.reduce((acc: Record<string, any>, docket) => {
+    const siteId = docket.siteId;
+    if (!acc[siteId]) {
+      acc[siteId] = {
+        total: 0,
+        open: 0,
+        critical: 0,
+        name: `Site ${siteId}` // This would be replaced with actual site names in a real system
+      };
+    }
+    
+    acc[siteId].total += 1;
+    
+    if (!["CLOSED", "REJECTED"].includes(docket.status)) {
+      acc[siteId].open += 1;
+    }
+    
+    if (docket.slaCategory === "CRITICAL") {
+      acc[siteId].critical += 1;
+    }
+    
+    return acc;
+  }, {});
+
+  // Convert site metrics to array for table display
+  const siteMetricsArray = Object.entries(siteMetrics).map(([siteId, metrics]) => ({
+    siteId,
+    ...metrics
+  }));
 
   // Check if current user has access to this site
   useEffect(() => {
@@ -175,6 +217,11 @@ const MaintenanceDockets = () => {
     }
   };
 
+  // Navigate to site specific dockets
+  const handleSiteSelect = (selectedSiteId: string) => {
+    navigate(`/maintenance/${selectedSiteId}`);
+  };
+
   // Filter site-specific dockets
   const siteDockets = siteId ? dockets.filter(docket => docket.siteId === siteId) : dockets;
 
@@ -208,7 +255,7 @@ const MaintenanceDockets = () => {
     </div>
 
     {/* Back button - Only show for admins who can change sites */}
-    {isAdmin && (
+    {isAdmin && siteId && (
       <Button 
         variant="outline" 
         onClick={handleBackToSites} 
@@ -219,7 +266,7 @@ const MaintenanceDockets = () => {
       </Button>
     )}
 
-    {/* Site Information Card */}
+    {/* Site Information Card - Only show when a specific site is selected */}
     {siteId && (
       <Card className="mb-6">
         <CardHeader>
@@ -241,7 +288,9 @@ const MaintenanceDockets = () => {
             <div>
               <p className="text-sm font-medium text-gray-500">Total Dockets</p>
               <div className="flex items-baseline mt-1">
-                <h3 className="text-2xl font-bold">{siteDockets.length}</h3>
+                <h3 className="text-2xl font-bold">
+                  {dockets.filter(d => d.siteId === siteId).length}
+                </h3>
               </div>
             </div>
             
@@ -249,7 +298,7 @@ const MaintenanceDockets = () => {
               <p className="text-sm font-medium text-gray-500">Open Dockets</p>
               <div className="flex items-baseline mt-1">
                 <h3 className="text-2xl font-bold text-blue-600">
-                  {siteDockets.filter(d => !["CLOSED", "REJECTED"].includes(d.status)).length}
+                  {dockets.filter(d => d.siteId === siteId && !["CLOSED", "REJECTED"].includes(d.status)).length}
                 </h3>
               </div>
             </div>
@@ -258,7 +307,7 @@ const MaintenanceDockets = () => {
               <p className="text-sm font-medium text-gray-500">Critical Dockets</p>
               <div className="flex items-baseline mt-1">
                 <h3 className="text-2xl font-bold text-red-600">
-                  {siteDockets.filter(d => d.slaCategory === "CRITICAL").length}
+                  {dockets.filter(d => d.siteId === siteId && d.slaCategory === "CRITICAL").length}
                 </h3>
               </div>
             </div>
@@ -271,355 +320,407 @@ const MaintenanceDockets = () => {
       <CardHeader className="pb-3">
         <CardTitle>Maintenance Dockets</CardTitle>
         <CardDescription>
-          View and manage all maintenance dockets in the system
+          {siteId ? "View and manage all maintenance dockets for this site" : "Select a site to view its maintenance dockets"}
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <Tabs defaultValue="all" value={currentTab} onValueChange={setCurrentTab} className="space-y-4">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <TabsList>
-              <TabsTrigger value="all">All</TabsTrigger>
-              <TabsTrigger value="open">Open</TabsTrigger>
-              <TabsTrigger value="critical">
-                Critical
-                <span className="ml-1.5 bg-red-100 text-red-800 text-xs font-semibold px-2 py-0.5 rounded">
-                  {siteDockets.filter(d => d.slaCategory === "CRITICAL").length}
-                </span>
-              </TabsTrigger>
-              <TabsTrigger value="closed">Closed</TabsTrigger>
-            </TabsList>
-            
-            <div className="flex flex-col md:flex-row gap-2">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input className="pl-10 md:w-[250px]" placeholder="Search dockets..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
-              </div>
-              
-              <div className="flex gap-2">
-                <Select onValueChange={value => setTypeFilter(value === "ALL" ? null : value)}>
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Filter by type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ALL">All Types</SelectItem>
-                    <SelectItem value="COMPREHENSIVE">Comprehensive</SelectItem>
-                    <SelectItem value="PREVENTIVE_SCHEDULED">Preventive (Scheduled)</SelectItem>
-                    <SelectItem value="PREVENTIVE_UNSCHEDULED">Preventive (Unscheduled)</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Select onValueChange={value => setStatusFilter(value === "ALL" ? null : value)}>
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Filter by status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ALL">All Statuses</SelectItem>
-                    <SelectItem value="DRAFTED">Drafted</SelectItem>
-                    <SelectItem value="SUBMITTED">Submitted</SelectItem>
-                    <SelectItem value="APPROVED">Approved</SelectItem>
-                    <SelectItem value="REJECTED">Rejected</SelectItem>
-                    <SelectItem value="RECOMMENDED">Recommended</SelectItem>
-                    <SelectItem value="CLOSED">Closed</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+        {/* Show site selection table when no specific site is selected */}
+        {!siteId ? (
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Site ID</TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Total Dockets</TableHead>
+                  <TableHead>Open Dockets</TableHead>
+                  <TableHead>Critical Dockets</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {siteMetricsArray.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center h-32 text-gray-500">
+                      No sites found with maintenance dockets
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  siteMetricsArray.map((site) => (
+                    <TableRow key={site.siteId}>
+                      <TableCell>{site.siteId}</TableCell>
+                      <TableCell>{site.name}</TableCell>
+                      <TableCell>{site.total}</TableCell>
+                      <TableCell>
+                        <span className="text-blue-600 font-medium">{site.open}</span>
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-red-600 font-medium">{site.critical}</span>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button 
+                          variant="default" 
+                          size="sm" 
+                          onClick={() => handleSiteSelect(site.siteId)}
+                        >
+                          View Dockets
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
           </div>
-          
-          <TabsContent value="all" className="m-0">
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Docket No</TableHead>
-                    <TableHead>Title</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>SLA Category</TableHead>
-                    <TableHead>Est. Completion</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Last Action</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredDockets.length === 0 ? <TableRow>
-                      <TableCell colSpan={8} className="text-center h-32 text-gray-500">
-                        No maintenance dockets found matching your filters
-                      </TableCell>
-                    </TableRow> : filteredDockets.map(docket => <TableRow key={docket.id}>
-                        <TableCell>{docket.docketNo}</TableCell>
-                        <TableCell>
-                          <div>
-                            <div className="font-medium">{docket.title}</div>
-                            <div className="text-sm text-gray-500 truncate max-w-[250px]" title={docket.description}>
-                              {docket.description}
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline">
-                            {formatMaintenanceType(docket.type)}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>{getSLACategoryBadge(docket.slaCategory)}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center">
-                            <CalendarDays className="h-4 w-4 text-gray-400 mr-2" />
-                            <span>{new Date(docket.estimatedCompletionDate).toLocaleDateString()}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center">
-                            {getStatusIcon(docket.status)}
-                            <span className={`ml-2 ${getDocketStatusClass(docket.status)}`}>
-                              {docket.status.charAt(0) + docket.status.slice(1).toLowerCase()}
-                            </span>
-                            {docket.isOverdue && <Badge variant="destructive" className="ml-2">Overdue</Badge>}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="text-sm text-gray-500">
-                            {new Date(docket.lastActionDate).toLocaleDateString()} by {docket.lastActionBy}
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
-                            <Button variant="ghost" size="icon" title="View Details" onClick={() => viewDocketDetails(docket)}>
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="icon" title="Comments">
-                              <MessageSquare className="h-4 w-4" />
-                              {Math.floor(Math.random() * 5) > 0}
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>)}
-                </TableBody>
-              </Table>
+        ) : (
+          /* Show detailed dockets when a specific site is selected */
+          <Tabs defaultValue="all" value={currentTab} onValueChange={setCurrentTab} className="space-y-4">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <TabsList>
+                <TabsTrigger value="all">All</TabsTrigger>
+                <TabsTrigger value="open">Open</TabsTrigger>
+                <TabsTrigger value="critical">
+                  Critical
+                  <span className="ml-1.5 bg-red-100 text-red-800 text-xs font-semibold px-2 py-0.5 rounded">
+                    {dockets.filter(d => d.siteId === siteId && d.slaCategory === "CRITICAL").length}
+                  </span>
+                </TabsTrigger>
+                <TabsTrigger value="closed">Closed</TabsTrigger>
+              </TabsList>
+              
+              <div className="flex flex-col md:flex-row gap-2">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input className="pl-10 md:w-[250px]" placeholder="Search dockets..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+                </div>
+                
+                <div className="flex gap-2">
+                  <Select onValueChange={value => setTypeFilter(value === "ALL" ? null : value)}>
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Filter by type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ALL">All Types</SelectItem>
+                      <SelectItem value="COMPREHENSIVE">Comprehensive</SelectItem>
+                      <SelectItem value="PREVENTIVE_SCHEDULED">Preventive (Scheduled)</SelectItem>
+                      <SelectItem value="PREVENTIVE_UNSCHEDULED">Preventive (Unscheduled)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select onValueChange={value => setStatusFilter(value === "ALL" ? null : value)}>
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Filter by status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ALL">All Statuses</SelectItem>
+                      <SelectItem value="DRAFTED">Drafted</SelectItem>
+                      <SelectItem value="SUBMITTED">Submitted</SelectItem>
+                      <SelectItem value="APPROVED">Approved</SelectItem>
+                      <SelectItem value="REJECTED">Rejected</SelectItem>
+                      <SelectItem value="RECOMMENDED">Recommended</SelectItem>
+                      <SelectItem value="CLOSED">Closed</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
             </div>
-          </TabsContent>
-          <TabsContent value="open" className="m-0">
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Docket No</TableHead>
-                    <TableHead>Title</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>SLA Category</TableHead>
-                    <TableHead>Est. Completion</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Last Action</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredDockets.length === 0 ? <TableRow>
-                      <TableCell colSpan={8} className="text-center h-32 text-gray-500">
-                        No maintenance dockets found matching your filters
-                      </TableCell>
-                    </TableRow> : filteredDockets.map(docket => <TableRow key={docket.id}>
-                        <TableCell>{docket.docketNo}</TableCell>
-                        <TableCell>
-                          <div>
-                            <div className="font-medium">{docket.title}</div>
-                            <div className="text-sm text-gray-500 truncate max-w-[250px]" title={docket.description}>
-                              {docket.description}
+            
+            {/* Keep existing tabs content with all the docket details tables */}
+            <TabsContent value="all" className="m-0">
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Docket No</TableHead>
+                      <TableHead>Title</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>SLA Category</TableHead>
+                      <TableHead>Est. Completion</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Last Action</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredDockets.length === 0 ? <TableRow>
+                        <TableCell colSpan={8} className="text-center h-32 text-gray-500">
+                          No maintenance dockets found matching your filters
+                        </TableCell>
+                      </TableRow> : filteredDockets.map(docket => <TableRow key={docket.id}>
+                          <TableCell>{docket.docketNo}</TableCell>
+                          <TableCell>
+                            <div>
+                              <div className="font-medium">{docket.title}</div>
+                              <div className="text-sm text-gray-500 truncate max-w-[250px]" title={docket.description}>
+                                {docket.description}
+                              </div>
                             </div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline">
-                            {formatMaintenanceType(docket.type)}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>{getSLACategoryBadge(docket.slaCategory)}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center">
-                            <CalendarDays className="h-4 w-4 text-gray-400 mr-2" />
-                            <span>{new Date(docket.estimatedCompletionDate).toLocaleDateString()}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center">
-                            {getStatusIcon(docket.status)}
-                            <span className={`ml-2 ${getDocketStatusClass(docket.status)}`}>
-                              {docket.status.charAt(0) + docket.status.slice(1).toLowerCase()}
-                            </span>
-                            {docket.isOverdue && <Badge variant="destructive" className="ml-2">Overdue</Badge>}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="text-sm text-gray-500">
-                            {new Date(docket.lastActionDate).toLocaleDateString()} by {docket.lastActionBy}
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
-                            <Button variant="ghost" size="icon" title="View Details" onClick={() => viewDocketDetails(docket)}>
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="icon" title="Comments">
-                              <MessageSquare className="h-4 w-4" />
-                              {Math.floor(Math.random() * 5) > 0 && <span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
-                                  {Math.floor(Math.random() * 5) + 1}
-                                </span>}
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>)}
-                </TableBody>
-              </Table>
-            </div>
-          </TabsContent>
-          <TabsContent value="critical" className="m-0">
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Docket No</TableHead>
-                    <TableHead>Title</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>SLA Category</TableHead>
-                    <TableHead>Est. Completion</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Last Action</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredDockets.length === 0 ? <TableRow>
-                      <TableCell colSpan={8} className="text-center h-32 text-gray-500">
-                        No maintenance dockets found matching your filters
-                      </TableCell>
-                    </TableRow> : filteredDockets.map(docket => <TableRow key={docket.id}>
-                        <TableCell>{docket.docketNo}</TableCell>
-                        <TableCell>
-                          <div>
-                            <div className="font-medium">{docket.title}</div>
-                            <div className="text-sm text-gray-500 truncate max-w-[250px]" title={docket.description}>
-                              {docket.description}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline">
+                              {formatMaintenanceType(docket.type)}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>{getSLACategoryBadge(docket.slaCategory)}</TableCell>
+                          <TableCell>
+                            <div className="flex items-center">
+                              <CalendarDays className="h-4 w-4 text-gray-400 mr-2" />
+                              <span>{new Date(docket.estimatedCompletionDate).toLocaleDateString()}</span>
                             </div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline">
-                            {formatMaintenanceType(docket.type)}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>{getSLACategoryBadge(docket.slaCategory)}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center">
-                            <CalendarDays className="h-4 w-4 text-gray-400 mr-2" />
-                            <span>{new Date(docket.estimatedCompletionDate).toLocaleDateString()}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center">
-                            {getStatusIcon(docket.status)}
-                            <span className={`ml-2 ${getDocketStatusClass(docket.status)}`}>
-                              {docket.status.charAt(0) + docket.status.slice(1).toLowerCase()}
-                            </span>
-                            {docket.isOverdue && <Badge variant="destructive" className="ml-2">Overdue</Badge>}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="text-sm text-gray-500">
-                            {new Date(docket.lastActionDate).toLocaleDateString()} by {docket.lastActionBy}
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
-                            <Button variant="ghost" size="icon" title="View Details" onClick={() => viewDocketDetails(docket)}>
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="icon" title="Comments">
-                              <MessageSquare className="h-4 w-4" />
-                              {Math.floor(Math.random() * 5) > 0 && <span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
-                                  {Math.floor(Math.random() * 5) + 1}
-                                </span>}
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>)}
-                </TableBody>
-              </Table>
-            </div>
-          </TabsContent>
-          <TabsContent value="closed" className="m-0">
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Docket No</TableHead>
-                    <TableHead>Title</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>SLA Category</TableHead>
-                    <TableHead>Est. Completion</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Last Action</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredDockets.length === 0 ? <TableRow>
-                      <TableCell colSpan={8} className="text-center h-32 text-gray-500">
-                        No maintenance dockets found matching your filters
-                      </TableCell>
-                    </TableRow> : filteredDockets.map(docket => <TableRow key={docket.id}>
-                        <TableCell>{docket.docketNo}</TableCell>
-                        <TableCell>
-                          <div>
-                            <div className="font-medium">{docket.title}</div>
-                            <div className="text-sm text-gray-500 truncate max-w-[250px]" title={docket.description}>
-                              {docket.description}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center">
+                              {getStatusIcon(docket.status)}
+                              <span className={`ml-2 ${getDocketStatusClass(docket.status)}`}>
+                                {docket.status.charAt(0) + docket.status.slice(1).toLowerCase()}
+                              </span>
+                              {docket.isOverdue && <Badge variant="destructive" className="ml-2">Overdue</Badge>}
                             </div>
-                          </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="text-sm text-gray-500">
+                              {new Date(docket.lastActionDate).toLocaleDateString()} by {docket.lastActionBy}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-2">
+                              <Button variant="ghost" size="icon" title="View Details" onClick={() => viewDocketDetails(docket)}>
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                              <Button variant="ghost" size="icon" title="Comments">
+                                <MessageSquare className="h-4 w-4" />
+                                {Math.floor(Math.random() * 5) > 0}
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>)}
+                  </TableBody>
+                </Table>
+              </div>
+            </TabsContent>
+            <TabsContent value="open" className="m-0">
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Docket No</TableHead>
+                      <TableHead>Title</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>SLA Category</TableHead>
+                      <TableHead>Est. Completion</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Last Action</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredDockets.length === 0 ? <TableRow>
+                        <TableCell colSpan={8} className="text-center h-32 text-gray-500">
+                          No maintenance dockets found matching your filters
                         </TableCell>
-                        <TableCell>
-                          <Badge variant="outline">
-                            {formatMaintenanceType(docket.type)}
-                          </Badge>
+                      </TableRow> : filteredDockets.map(docket => <TableRow key={docket.id}>
+                          <TableCell>{docket.docketNo}</TableCell>
+                          <TableCell>
+                            <div>
+                              <div className="font-medium">{docket.title}</div>
+                              <div className="text-sm text-gray-500 truncate max-w-[250px]" title={docket.description}>
+                                {docket.description}
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline">
+                              {formatMaintenanceType(docket.type)}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>{getSLACategoryBadge(docket.slaCategory)}</TableCell>
+                          <TableCell>
+                            <div className="flex items-center">
+                              <CalendarDays className="h-4 w-4 text-gray-400 mr-2" />
+                              <span>{new Date(docket.estimatedCompletionDate).toLocaleDateString()}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center">
+                              {getStatusIcon(docket.status)}
+                              <span className={`ml-2 ${getDocketStatusClass(docket.status)}`}>
+                                {docket.status.charAt(0) + docket.status.slice(1).toLowerCase()}
+                              </span>
+                              {docket.isOverdue && <Badge variant="destructive" className="ml-2">Overdue</Badge>}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="text-sm text-gray-500">
+                              {new Date(docket.lastActionDate).toLocaleDateString()} by {docket.lastActionBy}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-2">
+                              <Button variant="ghost" size="icon" title="View Details" onClick={() => viewDocketDetails(docket)}>
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                              <Button variant="ghost" size="icon" title="Comments">
+                                <MessageSquare className="h-4 w-4" />
+                                {Math.floor(Math.random() * 5) > 0 && <span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                                    {Math.floor(Math.random() * 5) + 1}
+                                  </span>}
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>)}
+                  </TableBody>
+                </Table>
+              </div>
+            </TabsContent>
+            <TabsContent value="critical" className="m-0">
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Docket No</TableHead>
+                      <TableHead>Title</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>SLA Category</TableHead>
+                      <TableHead>Est. Completion</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Last Action</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredDockets.length === 0 ? <TableRow>
+                        <TableCell colSpan={8} className="text-center h-32 text-gray-500">
+                          No maintenance dockets found matching your filters
                         </TableCell>
-                        <TableCell>{getSLACategoryBadge(docket.slaCategory)}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center">
-                            <CalendarDays className="h-4 w-4 text-gray-400 mr-2" />
-                            <span>{new Date(docket.estimatedCompletionDate).toLocaleDateString()}</span>
-                          </div>
+                      </TableRow> : filteredDockets.map(docket => <TableRow key={docket.id}>
+                          <TableCell>{docket.docketNo}</TableCell>
+                          <TableCell>
+                            <div>
+                              <div className="font-medium">{docket.title}</div>
+                              <div className="text-sm text-gray-500 truncate max-w-[250px]" title={docket.description}>
+                                {docket.description}
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline">
+                              {formatMaintenanceType(docket.type)}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>{getSLACategoryBadge(docket.slaCategory)}</TableCell>
+                          <TableCell>
+                            <div className="flex items-center">
+                              <CalendarDays className="h-4 w-4 text-gray-400 mr-2" />
+                              <span>{new Date(docket.estimatedCompletionDate).toLocaleDateString()}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center">
+                              {getStatusIcon(docket.status)}
+                              <span className={`ml-2 ${getDocketStatusClass(docket.status)}`}>
+                                {docket.status.charAt(0) + docket.status.slice(1).toLowerCase()}
+                              </span>
+                              {docket.isOverdue && <Badge variant="destructive" className="ml-2">Overdue</Badge>}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="text-sm text-gray-500">
+                              {new Date(docket.lastActionDate).toLocaleDateString()} by {docket.lastActionBy}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-2">
+                              <Button variant="ghost" size="icon" title="View Details" onClick={() => viewDocketDetails(docket)}>
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                              <Button variant="ghost" size="icon" title="Comments">
+                                <MessageSquare className="h-4 w-4" />
+                                {Math.floor(Math.random() * 5) > 0 && <span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                                    {Math.floor(Math.random() * 5) + 1}
+                                  </span>}
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>)}
+                  </TableBody>
+                </Table>
+              </div>
+            </TabsContent>
+            <TabsContent value="closed" className="m-0">
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Docket No</TableHead>
+                      <TableHead>Title</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>SLA Category</TableHead>
+                      <TableHead>Est. Completion</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Last Action</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredDockets.length === 0 ? <TableRow>
+                        <TableCell colSpan={8} className="text-center h-32 text-gray-500">
+                          No maintenance dockets found matching your filters
                         </TableCell>
-                        <TableCell>
-                          <div className="flex items-center">
-                            {getStatusIcon(docket.status)}
-                            <span className={`ml-2 ${getDocketStatusClass(docket.status)}`}>
-                              {docket.status.charAt(0) + docket.status.slice(1).toLowerCase()}
-                            </span>
-                            {docket.isOverdue && <Badge variant="destructive" className="ml-2">Overdue</Badge>}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="text-sm text-gray-500">
-                            {new Date(docket.lastActionDate).toLocaleDateString()} by {docket.lastActionBy}
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
-                            <Button variant="ghost" size="icon" title="View Details" onClick={() => viewDocketDetails(docket)}>
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="icon" title="Comments">
-                              <MessageSquare className="h-4 w-4" />
-                              {Math.floor(Math.random() * 5) > 0 && <span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
-                                  {Math.floor(Math.random() * 5) + 1}
-                                </span>}
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>)}
-                </TableBody>
-              </Table>
-            </div>
-          </TabsContent>
-        </Tabs>
+                      </TableRow> : filteredDockets.map(docket => <TableRow key={docket.id}>
+                          <TableCell>{docket.docketNo}</TableCell>
+                          <TableCell>
+                            <div>
+                              <div className="font-medium">{docket.title}</div>
+                              <div className="text-sm text-gray-500 truncate max-w-[250px]" title={docket.description}>
+                                {docket.description}
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline">
+                              {formatMaintenanceType(docket.type)}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>{getSLACategoryBadge(docket.slaCategory)}</TableCell>
+                          <TableCell>
+                            <div className="flex items-center">
+                              <CalendarDays className="h-4 w-4 text-gray-400 mr-2" />
+                              <span>{new Date(docket.estimatedCompletionDate).toLocaleDateString()}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center">
+                              {getStatusIcon(docket.status)}
+                              <span className={`ml-2 ${getDocketStatusClass(docket.status)}`}>
+                                {docket.status.charAt(0) + docket.status.slice(1).toLowerCase()}
+                              </span>
+                              {docket.isOverdue && <Badge variant="destructive" className="ml-2">Overdue</Badge>}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="text-sm text-gray-500">
+                              {new Date(docket.lastActionDate).toLocaleDateString()} by {docket.lastActionBy}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-2">
+                              <Button variant="ghost" size="icon" title="View Details" onClick={() => viewDocketDetails(docket)}>
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                              <Button variant="ghost" size="icon" title="Comments">
+                                <MessageSquare className="h-4 w-4" />
+                                {Math.floor(Math.random() * 5) > 0 && <span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                                    {Math.floor(Math.random() * 5) + 1}
+                                  </span>}
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>)}
+                  </TableBody>
+                </Table>
+              </div>
+            </TabsContent>
+          </Tabs>
+        )}
       </CardContent>
     </Card>
 
