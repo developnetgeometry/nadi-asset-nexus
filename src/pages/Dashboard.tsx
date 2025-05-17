@@ -1,3 +1,4 @@
+
 import { BarChart4, Box, CheckCircle, Clock, AlertCircle, Wrench, Search, Filter, Download, Eye, Settings, Trash2, Plus, ArrowLeft } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "../contexts/AuthContext";
@@ -25,6 +26,7 @@ const Dashboard = () => {
   } = useAuth();
   const canManageAssets = checkPermission(CRUD_ASSETS_ROLES);
   const isAdmin = checkPermission(ADMIN_ROLES);
+  const isTpSite = currentUser?.role === "TP_SITE";
   const navigate = useNavigate();
 
   // Site selection state
@@ -48,12 +50,11 @@ const Dashboard = () => {
     const activeAssets = siteAssets.filter(asset => asset.status === "ACTIVE").length;
     const underRepairAssets = siteAssets.filter(asset => asset.status === "UNDER_REPAIR").length;
 
-    // Find a sample asset to get the state information
-    const sampleAsset = siteAssets[0];
+    // Get location information
     return {
       siteId: site,
-      name: site,
-      state: sampleAsset?.state || 'Unknown',
+      name: site, // Using siteId as name since we don't have a separate name field
+      state: "Unknown", // Default state since it's not in the Asset type
       totalAssets,
       activeAssets,
       underRepairAssets
@@ -61,7 +62,11 @@ const Dashboard = () => {
   });
 
   // Filter sites based on search term
-  const filteredSites = siteStatistics.filter(site => site.siteId.toLowerCase().includes(searchTerm.toLowerCase()) || site.name.toLowerCase().includes(searchTerm.toLowerCase()) || site.state.toLowerCase().includes(searchTerm.toLowerCase()));
+  const filteredSites = siteStatistics.filter(site => 
+    site.siteId.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    site.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    site.state.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   // Filter assets based on selected site
   const siteAssets = selectedSite ? mockAssets.filter(asset => asset.location_id === selectedSite) : mockAssets;
@@ -75,27 +80,35 @@ const Dashboard = () => {
   const siteTotalAssets = siteAssets.length;
   const siteActiveAssets = siteAssets.filter(asset => asset.status === "ACTIVE").length;
   const siteUnderRepairAssets = siteAssets.filter(asset => asset.status === "UNDER_REPAIR").length;
+  
   const handleViewAsset = (asset: Asset) => {
     setSelectedAsset(asset);
     setAssetDetailsOpen(true);
   };
+  
   const handleSiteSelect = (site: string) => {
     setSelectedSite(site);
     setShowSiteSelector(false);
   };
+  
   const handleBackToSites = () => {
     setShowSiteSelector(true);
     setSelectedSite(null);
   };
 
-  // Effect to reset the site selector when the user logs in
+  // Set default site for TP_SITE users
   useEffect(() => {
-    if (currentUser && isAdmin) {
+    if (currentUser && currentUser.role === "TP_SITE" && currentUser.siteId) {
+      setSelectedSite(currentUser.siteId);
+      setShowSiteSelector(false);
+    } else if (currentUser && isAdmin) {
       setShowSiteSelector(true);
       setSelectedSite(null);
     }
   }, [currentUser, isAdmin]);
-  return <div className="space-y-6">
+
+  return (
+    <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Asset Management</h1>
@@ -103,13 +116,16 @@ const Dashboard = () => {
             Manage and monitor all registered assets in the system
           </p>
         </div>
-        {canManageAssets && !showSiteSelector && <Button className="bg-indigo-600 hover:bg-indigo-700">
+        {canManageAssets && !showSiteSelector && (
+          <Button className="bg-indigo-600 hover:bg-indigo-700">
             <Plus className="mr-2 h-4 w-4" /> Add New Asset
-          </Button>}
+          </Button>
+        )}
       </div>
 
       {/* Site Selector for Admin Roles */}
-      {isAdmin && showSiteSelector ? <>
+      {isAdmin && showSiteSelector ? (
+        <>
           {/* Summary Cards - Show totals for all assets */}
           <div className="grid gap-6 md:grid-cols-3">
             <Card>
@@ -185,11 +201,15 @@ const Dashboard = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredSites.length === 0 ? <TableRow>
+                    {filteredSites.length === 0 ? (
+                      <TableRow>
                         <TableCell colSpan={8} className="text-center h-32 text-gray-500">
                           No sites found matching your filters
                         </TableCell>
-                      </TableRow> : filteredSites.map((site, index) => <TableRow key={site.siteId}>
+                      </TableRow>
+                    ) : (
+                      filteredSites.map((site, index) => (
+                        <TableRow key={site.siteId}>
                           <TableCell>{index + 1}</TableCell>
                           <TableCell>{site.siteId}</TableCell>
                           <TableCell>{site.name}</TableCell>
@@ -208,27 +228,44 @@ const Dashboard = () => {
                               </Button>
                             </div>
                           </TableCell>
-                        </TableRow>)}
+                        </TableRow>
+                      ))
+                    )}
                   </TableBody>
                 </Table>
               </div>
             </CardContent>
           </Card>
-        </> : <>
-          {/* Back button */}
-          
+        </>
+      ) : (
+        <>
+          {/* Back button - Only show for admins who can change sites */}
+          {isAdmin && (
+            <Button 
+              variant="outline" 
+              onClick={handleBackToSites} 
+              className="mb-4 flex items-center"
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Sites
+            </Button>
+          )}
 
           {/* If a site is selected, show site-specific stats */}
-          {selectedSite && <Card className="mb-6">
+          {selectedSite && (
+            <Card className="mb-6">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div>
                     <CardTitle>Site: {selectedSite}</CardTitle>
                     <CardDescription>Asset statistics for this site</CardDescription>
                   </div>
-                  <Button variant="outline" onClick={() => setShowSiteSelector(true)}>
-                    Change Site
-                  </Button>
+                  {/* Only show Change Site button for admin users */}
+                  {isAdmin && (
+                    <Button variant="outline" onClick={() => setShowSiteSelector(true)}>
+                      Change Site
+                    </Button>
+                  )}
                 </div>
               </CardHeader>
               <CardContent>
@@ -255,7 +292,8 @@ const Dashboard = () => {
                   </div>
                 </div>
               </CardContent>
-            </Card>}
+            </Card>
+          )}
 
           {/* Asset List */}
           <Card>
@@ -286,11 +324,15 @@ const Dashboard = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {siteAssets.length === 0 ? <TableRow>
+                    {siteAssets.length === 0 ? (
+                      <TableRow>
                         <TableCell colSpan={8} className="text-center h-32 text-gray-500">
                           No assets found for this site
                         </TableCell>
-                      </TableRow> : siteAssets.map((asset, index) => <TableRow key={asset.id}>
+                      </TableRow>
+                    ) : (
+                      siteAssets.map((asset, index) => (
+                        <TableRow key={asset.id}>
                           <TableCell>{index + 1}</TableCell>
                           <TableCell>{asset.item_name}</TableCell>
                           <TableCell>{asset.category}</TableCell>
@@ -308,7 +350,9 @@ const Dashboard = () => {
                               </Button>
                             </div>
                           </TableCell>
-                        </TableRow>)}
+                        </TableRow>
+                      ))
+                    )}
                   </TableBody>
                 </Table>
               </div>
@@ -317,7 +361,10 @@ const Dashboard = () => {
           
           {/* Asset Details Dialog */}
           {selectedAsset && <AssetDetailsDialog open={assetDetailsOpen} onOpenChange={setAssetDetailsOpen} asset={selectedAsset} />}
-        </>}
-    </div>;
+        </>
+      )}
+    </div>
+  );
 };
+
 export default Dashboard;
