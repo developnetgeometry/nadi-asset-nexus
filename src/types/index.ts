@@ -1,4 +1,3 @@
-
 // User Roles
 export type UserRole = 
   | 'SUPER_ADMIN'
@@ -112,9 +111,8 @@ export interface User {
   name: string;
   email: string;
   role: UserRole;
-  organization: string;
-  department?: string;
-  phoneNumber?: string;
+  site?: string; // The site ID that a TP_SITE user belongs to
+  avatarUrl?: string;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
