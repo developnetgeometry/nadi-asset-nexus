@@ -1,258 +1,254 @@
-import { BarChart4, Box, CheckCircle, Clock, AlertCircle, Wrench } from "lucide-react";
+
+import { BarChart4, Box, CheckCircle, Clock, AlertCircle, Wrench, Search, Filter, Download, Eye, Settings, Trash2 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "../contexts/AuthContext";
-import { mockKPIStats, mockDockets } from "../data/mockData";
+import { mockKPIStats, mockAssets } from "../data/mockData";
 import { Button } from "@/components/ui/button";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { useState } from "react";
+import { AssetStatus, UserRole } from "../types";
+import { AssetDetailsDialog } from "@/components/assets/AssetDetailsDialog";
+
+// Define roles that can create/edit assets
+const CRUD_ASSETS_ROLES: UserRole[] = ["SUPER_ADMIN", "TP_ADMIN", "TP_OPERATION", "TP_PIC", "TP_SITE"];
 
 const Dashboard = () => {
-  const { currentUser } = useAuth();
-
-  // Dummy data for charts
-  const maintenanceTypeData = [
-    { name: 'Comprehensive', value: 2 },
-    { name: 'Preventive (Scheduled)', value: 3 },
-    { name: 'Preventive (Unscheduled)', value: 1 },
-  ];
+  const { currentUser, checkPermission } = useAuth();
+  const canManageAssets = checkPermission(CRUD_ASSETS_ROLES);
   
-  const docketStatusData = [
-    { name: 'Drafted', value: 1 },
-    { name: 'Submitted', value: 1 },
-    { name: 'Approved', value: 2 },
-    { name: 'Rejected', value: 1 },
-    { name: 'Closed', value: 1 },
-  ];
+  // State for asset details dialog
+  const [selectedAsset, setSelectedAsset] = useState(null);
+  const [assetDetailsOpen, setAssetDetailsOpen] = useState(false);
+  
+  // State for filtering
+  const [searchTerm, setSearchTerm] = useState("");
+  const [typeFilter, setTypeFilter] = useState<string | null>(null);
+  const [siteFilter, setSiteFilter] = useState<string | null>(null);
 
-  const monthlyDocketData = [
-    { name: 'Jan', comprehensive: 2, preventive: 4 },
-    { name: 'Feb', comprehensive: 3, preventive: 3 },
-    { name: 'Mar', comprehensive: 1, preventive: 5 },
-    { name: 'Apr', comprehensive: 4, preventive: 2 },
-    { name: 'May', comprehensive: 2, preventive: 6 },
-    { name: 'Jun', comprehensive: 3, preventive: 3 },
-  ];
+  // Filter assets
+  const filteredAssets = mockAssets.filter(asset => {
+    const matchesSearch = searchTerm === "" || 
+      asset.item_name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      asset.serial_number?.toLowerCase().includes(searchTerm.toLowerCase());
+      
+    const matchesType = typeFilter === null || asset.category === typeFilter;
+    const matchesSite = siteFilter === null || asset.location_id.includes(siteFilter);
 
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#A569BD'];
+    return matchesSearch && matchesType && matchesSite;
+  });
+
+  // Get unique categories for filter dropdown
+  const categories = Array.from(new Set(mockAssets.map(asset => asset.category)));
+  
+  // Get unique locations for filter dropdown
+  const sites = Array.from(new Set(mockAssets.map(asset => asset.location_id)));
+  
+  // Count assets by status
+  const activeAssets = mockAssets.filter(asset => asset.status === "ACTIVE").length;
+  const underRepairAssets = mockAssets.filter(asset => asset.status === "UNDER_REPAIR").length;
+  const totalAssets = mockAssets.length;
+
+  const handleViewAsset = (asset) => {
+    setSelectedAsset(asset);
+    setAssetDetailsOpen(true);
+  };
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Asset Management</h1>
           <p className="text-muted-foreground">
-            Welcome back, {currentUser?.name}
+            Manage and monitor all registered assets in the system
           </p>
         </div>
-        <div className="flex space-x-2">
-          <Button variant="outline">Export Data</Button>
-          <Button>View Reports</Button>
-        </div>
+        {canManageAssets && (
+          <Button className="bg-indigo-600 hover:bg-indigo-700">
+            <Plus className="mr-2 h-4 w-4" /> Add New Asset
+          </Button>
+        )}
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="animate-fade-in">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Total Assets</CardTitle>
-            <Box className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{mockKPIStats.totalAssets}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {mockKPIStats.activeAssets} active, {mockKPIStats.underRepairAssets} under repair, {mockKPIStats.retiredAssets} retired
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="animate-fade-in [animation-delay:200ms]">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Open Dockets</CardTitle>
-            <Wrench className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{mockKPIStats.openDockets}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Out of {mockKPIStats.totalDockets} total dockets
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="animate-fade-in [animation-delay:400ms]">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">SLA Compliance</CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{100 - parseFloat(mockKPIStats.slaBreach.replace('%', ''))}%</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {mockKPIStats.slaBreach} breach rate
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="animate-fade-in [animation-delay:600ms]">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Critical Issues</CardTitle>
-            <AlertCircle className="h-4 w-4 text-red-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{mockKPIStats.criticalDockets}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              MTTR: {mockKPIStats.mttr} hours
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
-        <Card className="col-span-4">
-          <CardHeader>
-            <CardTitle>Monthly Maintenance</CardTitle>
-            <CardDescription>Comprehensive vs. Preventive maintenance dockets</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={monthlyDocketData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="comprehensive" fill="#3182CE" name="Comprehensive" />
-                <Bar dataKey="preventive" fill="#38B2AC" name="Preventive" />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-        <Card className="col-span-3">
-          <CardHeader>
-            <CardTitle>Dockets Breakdown</CardTitle>
-            <CardDescription>By type and status</CardDescription>
-          </CardHeader>
-          <CardContent className="flex justify-center">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex flex-col items-center">
-                <h3 className="text-sm font-medium text-center mb-2">By Type</h3>
-                <ResponsiveContainer width={150} height={150}>
-                  <PieChart>
-                    <Pie
-                      data={maintenanceTypeData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      outerRadius={60}
-                      fill="#8884d8"
-                      dataKey="value"
-                      label={({name}) => name}
-                    >
-                      {maintenanceTypeData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Legend layout="vertical" align="center" verticalAlign="bottom" />
-                  </PieChart>
-                </ResponsiveContainer>
+      {/* Summary Cards */}
+      <div className="grid gap-6 md:grid-cols-3">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-gray-500">Total Assets</p>
+              <div className="flex items-baseline">
+                <h3 className="text-3xl font-bold">{totalAssets}</h3>
+                <p className="ml-2 text-sm text-gray-500">Assets registered</p>
               </div>
-              <div className="flex flex-col items-center">
-                <h3 className="text-sm font-medium text-center mb-2">By Status</h3>
-                <ResponsiveContainer width={150} height={150}>
-                  <PieChart>
-                    <Pie
-                      data={docketStatusData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      outerRadius={60}
-                      fill="#8884d8"
-                      dataKey="value"
-                      label={({name}) => name}
-                    >
-                      {docketStatusData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Legend layout="vertical" align="center" verticalAlign="bottom" />
-                  </PieChart>
-                </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="pt-6">
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-gray-500">Active Assets</p>
+              <div className="flex items-baseline">
+                <h3 className="text-3xl font-bold text-green-600">{activeAssets}</h3>
+                <p className="ml-2 text-sm text-gray-500">Currently in use</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="pt-6">
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-gray-500">Under Maintenance</p>
+              <div className="flex items-baseline">
+                <h3 className="text-3xl font-bold text-red-600">{underRepairAssets}</h3>
+                <p className="ml-2 text-sm text-gray-500">Being serviced</p>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
+      {/* Asset List */}
       <Card>
-        <CardHeader>
-          <CardTitle>Recent Maintenance Dockets</CardTitle>
-          <CardDescription>Latest activity across all maintenance dockets</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="table-container">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Docket No</th>
-                  <th>Title</th>
-                  <th>Type</th>
-                  <th>SLA Category</th>
-                  <th>Status</th>
-                  <th>Last Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {mockDockets.slice(0, 5).map((docket) => (
-                  <tr key={docket.id}>
-                    <td>{docket.docketNo}</td>
-                    <td>{docket.title}</td>
-                    <td>
-                      {docket.type === "COMPREHENSIVE"
-                        ? "Comprehensive"
-                        : docket.type === "PREVENTIVE_SCHEDULED"
-                        ? "Preventive (Scheduled)"
-                        : "Preventive (Unscheduled)"}
-                    </td>
-                    <td>
-                      <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                        docket.slaCategory === "CRITICAL" 
-                          ? "bg-red-100 text-red-800"
-                          : docket.slaCategory === "NORMAL"
-                          ? "bg-yellow-100 text-yellow-800"
-                          : "bg-green-100 text-green-800"
-                      }`}>
-                        {docket.slaCategory.charAt(0) + docket.slaCategory.slice(1).toLowerCase()}
-                      </span>
-                    </td>
-                    <td>
-                      <span className={`status-pill ${
-                        docket.status === "DRAFTED"
-                          ? "status-drafted"
-                          : docket.status === "SUBMITTED"
-                          ? "status-submitted"
-                          : docket.status === "APPROVED"
-                          ? "status-approved"
-                          : docket.status === "REJECTED"
-                          ? "status-rejected"
-                          : "status-closed"
-                      }`}>
-                        {docket.status.charAt(0) + docket.status.slice(1).toLowerCase()}
-                      </span>
-                    </td>
-                    <td className="text-sm text-gray-500">
-                      {new Date(docket.lastActionDate).toLocaleDateString()}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        <CardContent className="pt-6">
+          <div className="flex flex-col sm:flex-row gap-4 mb-6 items-end">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input 
+                className="pl-10" 
+                placeholder="Search assets..." 
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <div className="flex gap-2">
+              <Select onValueChange={(value) => setTypeFilter(value === "All Types" ? null : value)}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="All Types" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="All Types">All Types</SelectItem>
+                  {categories.map((category) => (
+                    <SelectItem key={category} value={category}>
+                      {category}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              
+              <Select onValueChange={(value) => setSiteFilter(value === "All Sites" ? null : value)}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="All Sites" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="All Sites">All Sites</SelectItem>
+                  {sites.map((site) => (
+                    <SelectItem key={site} value={site}>
+                      {site}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              
+              <Button variant="outline" size="icon">
+                <Download className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
-          <div className="mt-6 flex justify-center">
-            <Button 
-              variant="outline" 
-              className="px-6 transition-all hover:shadow-md"
-            >
-              View All Dockets
-            </Button>
+
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[60px]">No.</TableHead>
+                  <TableHead>Item Name</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Quantity</TableHead>
+                  <TableHead>Nadi Centre</TableHead>
+                  <TableHead>Request Date</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredAssets.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={8} className="text-center h-32 text-gray-500">
+                      No assets found matching your filters
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredAssets.map((asset, index) => (
+                    <TableRow key={asset.id}>
+                      <TableCell>{index + 1}</TableCell>
+                      <TableCell>{asset.item_name}</TableCell>
+                      <TableCell>{asset.category}</TableCell>
+                      <TableCell>{asset.qty_unit}</TableCell>
+                      <TableCell>{asset.location_id}</TableCell>
+                      <TableCell>{asset.created_date ? new Date(asset.created_date).toLocaleDateString() : "N/A"}</TableCell>
+                      <TableCell>
+                        <Badge className={
+                          asset.status === "ACTIVE" ? "bg-green-100 text-green-800" : 
+                          asset.status === "UNDER_REPAIR" ? "bg-orange-100 text-orange-800" : 
+                          "bg-red-100 text-red-800"
+                        }>
+                          {asset.status === "ACTIVE" ? "Active" : 
+                           asset.status === "UNDER_REPAIR" ? "Under Repair" : 
+                           "Inactive"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex justify-end items-center space-x-1">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 w-8 p-0 rounded-md border-indigo-200"
+                            onClick={() => handleViewAsset(asset)}
+                          >
+                            <Eye className="h-4 w-4 text-indigo-600" />
+                          </Button>
+                          
+                          {canManageAssets && (
+                            <>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 w-8 p-0 rounded-md border-indigo-200"
+                              >
+                                <Settings className="h-4 w-4 text-indigo-600" />
+                              </Button>
+                              
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 w-8 p-0 rounded-md border-indigo-200"
+                              >
+                                <Trash2 className="h-4 w-4 text-indigo-600" />
+                              </Button>
+                            </>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
           </div>
         </CardContent>
       </Card>
+      
+      {/* Asset Details Dialog */}
+      {selectedAsset && (
+        <AssetDetailsDialog
+          open={assetDetailsOpen}
+          onOpenChange={setAssetDetailsOpen}
+          asset={selectedAsset}
+        />
+      )}
     </div>
   );
 };
