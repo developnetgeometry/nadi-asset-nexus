@@ -85,8 +85,7 @@ export interface MaintenanceDocket {
   category: DocketCategory;
   slaCategory: SLACategory;
   status: DocketStatus;
-  location: string;
-  siteId?: string; // Add siteId property
+  location: string; // Explicitly define location property
   assetId?: string;
   assignedTo?: string;
   requestedBy: string;
@@ -113,11 +112,9 @@ export interface User {
   name: string;
   email: string;
   role: UserRole;
-  site?: string; // The site ID that a TP_SITE user belongs to
-  organization?: string; // Add organization field
-  department?: string; // Add department field
-  phoneNumber?: string; // Add phone number field
-  avatarUrl?: string;
+  organization: string;
+  department?: string;
+  phoneNumber?: string;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;

@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { Wrench, Plus, Search, ArrowLeft, Filter, Eye, FileText, Clock, AlertTriangle, CheckCircle, XCircle, CalendarDays, MessageSquare } from "lucide-react";
+import { Wrench, Plus, Search, Download, Filter, Eye, FileText, Clock, AlertTriangle, CheckCircle, XCircle, CalendarDays, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -17,23 +16,7 @@ import NewDocketDialog from "../components/dockets/NewDocketDialog";
 
 // Define roles that can create maintenance dockets
 const CRUD_MAINTENANCE_ROLES: UserRole[] = ["SUPER_ADMIN", "TP_ADMIN", "TP_OPERATION", "TP_PIC", "TP_SITE"];
-// Define admin roles that need to select a site
-const ADMIN_ROLES: UserRole[] = ["SUPER_ADMIN", "TP_ADMIN", "TP_OPERATION"];
-
-// Helper function to calculate metrics for a site
-const calculateSiteMetrics = (dockets: MaintenanceDocket[], siteId: string) => {
-  const siteDockets = dockets.filter(docket => docket.siteId === siteId);
-  return {
-    total: siteDockets.length,
-    open: siteDockets.filter(d => !["CLOSED", "REJECTED"].includes(d.status)).length,
-    critical: siteDockets.filter(d => d.slaCategory === "CRITICAL").length,
-    name: `Site ${siteId}` // This would be replaced with actual site names in a real system
-  };
-};
-
 const MaintenanceDockets = () => {
-  const { siteId } = useParams<{ siteId: string }>();
-  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
@@ -49,55 +32,16 @@ const MaintenanceDockets = () => {
 
   // Check if user can create maintenance dockets
   const canCreateDockets = checkPermission(CRUD_MAINTENANCE_ROLES);
-  const isAdmin = checkPermission(ADMIN_ROLES);
-  const isTpSite = currentUser?.role === "TP_SITE";
 
   // Use the shared dockets state
   const [dockets, setDockets] = useState<MaintenanceDocket[]>(sharedDockets.getDockets());
-  
-  // Group dockets by site and calculate metrics
-  const siteMetrics = dockets.reduce((acc: Record<string, any>, docket) => {
-    const siteId = docket.siteId;
-    if (!acc[siteId]) {
-      acc[siteId] = {
-        total: 0,
-        open: 0,
-        critical: 0,
-        name: `Site ${siteId}` // This would be replaced with actual site names in a real system
-      };
-    }
-    
-    acc[siteId].total += 1;
-    
-    if (!["CLOSED", "REJECTED"].includes(docket.status)) {
-      acc[siteId].open += 1;
-    }
-    
-    if (docket.slaCategory === "CRITICAL") {
-      acc[siteId].critical += 1;
-    }
-    
-    return acc;
-  }, {});
-
-  // Convert site metrics to array for table display
-  const siteMetricsArray = Object.entries(siteMetrics).map(([siteId, metrics]) => ({
-    siteId,
-    ...metrics
-  }));
-
-  // Check if current user has access to this site
-  useEffect(() => {
-    if (isTpSite && currentUser && currentUser.site && siteId && currentUser.site !== siteId) {
-      navigate("/");
-    }
-  }, [isTpSite, currentUser, siteId, navigate]);
 
   // Subscribe to docket updates
   useEffect(() => {
     // This will be called whenever the shared dockets state changes
     const unsubscribe = sharedDockets.subscribeToDockets(updatedDockets => {
       setDockets(updatedDockets);
+
       // Log the update for debugging
       console.log("Dockets updated:", updatedDockets.length);
     });
@@ -177,11 +121,6 @@ const MaintenanceDockets = () => {
   const createNewDocket = () => {
     setIsNewDocketDialogOpen(true);
   };
-  
-  // Back to site selection
-  const handleBackToSites = () => {
-    navigate("/maintenance");
-  };
 
   // Helper function to get status icon
   const getStatusIcon = (status: DocketStatus) => {
@@ -217,16 +156,8 @@ const MaintenanceDockets = () => {
     }
   };
 
-  // Navigate to site specific dockets
-  const handleSiteSelect = (selectedSiteId: string) => {
-    navigate(`/maintenance/${selectedSiteId}`);
-  };
-
-  // Filter site-specific dockets
-  const siteDockets = siteId ? dockets.filter(docket => docket.siteId === siteId) : dockets;
-
   // Filter dockets based on search, filters, and tab
-  const filteredDockets = siteDockets.filter(docket => {
+  const filteredDockets = dockets.filter(docket => {
     // Filter by search term
     const matchesSearch = searchTerm === "" || docket.docketNo.toLowerCase().includes(searchTerm.toLowerCase()) || docket.title.toLowerCase().includes(searchTerm.toLowerCase());
 
@@ -240,140 +171,27 @@ const MaintenanceDockets = () => {
     const matchesTab = currentTab === "all" || currentTab === "open" && !["CLOSED", "REJECTED"].includes(docket.status) || currentTab === "critical" && docket.slaCategory === "CRITICAL" || currentTab === "closed" && docket.status === "CLOSED";
     return matchesSearch && matchesType && matchesStatus && matchesTab;
   });
-  
   return <div className="space-y-6">
-    <div className="flex justify-between items-center">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Maintenance Dockets</h1>
-        <p className="text-muted-foreground">
-          Manage all maintenance activities and track their progress
-        </p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Maintenance Dockets</h1>
+          <p className="text-muted-foreground">
+            Manage all maintenance activities and track their progress
+          </p>
+        </div>
+        {canCreateDockets && <Button onClick={createNewDocket}>
+            <Plus className="mr-2 h-4 w-4" /> New Maintenance Request
+          </Button>}
       </div>
-      {canCreateDockets && <Button onClick={createNewDocket}>
-        <Plus className="mr-2 h-4 w-4" /> New Maintenance Request
-      </Button>}
-    </div>
 
-    {/* Back button - Only show for admins who can change sites */}
-    {isAdmin && siteId && (
-      <Button 
-        variant="outline" 
-        onClick={handleBackToSites} 
-        className="mb-4 flex items-center"
-      >
-        <ArrowLeft className="mr-2 h-4 w-4" />
-        Back to Sites
-      </Button>
-    )}
-
-    {/* Site Information Card - Only show when a specific site is selected */}
-    {siteId && (
-      <Card className="mb-6">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>Site: {siteId}</CardTitle>
-              <CardDescription>Maintenance dockets for this site</CardDescription>
-            </div>
-            {/* Only show Change Site button for admin users */}
-            {isAdmin && (
-              <Button variant="outline" onClick={handleBackToSites}>
-                Change Site
-              </Button>
-            )}
-          </div>
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle>Maintenance Dockets</CardTitle>
+          <CardDescription>
+            View and manage all maintenance dockets in the system
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-6 md:grid-cols-3">
-            <div>
-              <p className="text-sm font-medium text-gray-500">Total Dockets</p>
-              <div className="flex items-baseline mt-1">
-                <h3 className="text-2xl font-bold">
-                  {dockets.filter(d => d.siteId === siteId).length}
-                </h3>
-              </div>
-            </div>
-            
-            <div>
-              <p className="text-sm font-medium text-gray-500">Open Dockets</p>
-              <div className="flex items-baseline mt-1">
-                <h3 className="text-2xl font-bold text-blue-600">
-                  {dockets.filter(d => d.siteId === siteId && !["CLOSED", "REJECTED"].includes(d.status)).length}
-                </h3>
-              </div>
-            </div>
-            
-            <div>
-              <p className="text-sm font-medium text-gray-500">Critical Dockets</p>
-              <div className="flex items-baseline mt-1">
-                <h3 className="text-2xl font-bold text-red-600">
-                  {dockets.filter(d => d.siteId === siteId && d.slaCategory === "CRITICAL").length}
-                </h3>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    )}
-
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle>Maintenance Dockets</CardTitle>
-        <CardDescription>
-          {siteId ? "View and manage all maintenance dockets for this site" : "Select a site to view its maintenance dockets"}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        {/* Show site selection table when no specific site is selected */}
-        {!siteId ? (
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Site ID</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Total Dockets</TableHead>
-                  <TableHead>Open Dockets</TableHead>
-                  <TableHead>Critical Dockets</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {siteMetricsArray.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center h-32 text-gray-500">
-                      No sites found with maintenance dockets
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  siteMetricsArray.map((site) => (
-                    <TableRow key={site.siteId}>
-                      <TableCell>{site.siteId}</TableCell>
-                      <TableCell>{site.name}</TableCell>
-                      <TableCell>{site.total}</TableCell>
-                      <TableCell>
-                        <span className="text-blue-600 font-medium">{site.open}</span>
-                      </TableCell>
-                      <TableCell>
-                        <span className="text-red-600 font-medium">{site.critical}</span>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button 
-                          variant="default" 
-                          size="sm" 
-                          onClick={() => handleSiteSelect(site.siteId)}
-                        >
-                          View Dockets
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        ) : (
-          /* Show detailed dockets when a specific site is selected */
           <Tabs defaultValue="all" value={currentTab} onValueChange={setCurrentTab} className="space-y-4">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <TabsList>
@@ -382,7 +200,7 @@ const MaintenanceDockets = () => {
                 <TabsTrigger value="critical">
                   Critical
                   <span className="ml-1.5 bg-red-100 text-red-800 text-xs font-semibold px-2 py-0.5 rounded">
-                    {dockets.filter(d => d.siteId === siteId && d.slaCategory === "CRITICAL").length}
+                    {dockets.filter(d => d.slaCategory === "CRITICAL").length}
                   </span>
                 </TabsTrigger>
                 <TabsTrigger value="closed">Closed</TabsTrigger>
@@ -420,11 +238,11 @@ const MaintenanceDockets = () => {
                       <SelectItem value="CLOSED">Closed</SelectItem>
                     </SelectContent>
                   </Select>
+                  
                 </div>
               </div>
             </div>
             
-            {/* Keep existing tabs content with all the docket details tables */}
             <TabsContent value="all" className="m-0">
               <div className="rounded-md border">
                 <Table>
@@ -498,8 +316,10 @@ const MaintenanceDockets = () => {
               </div>
             </TabsContent>
             <TabsContent value="open" className="m-0">
+              {/* Same table structure as "all" tab but with pre-filtered data */}
               <div className="rounded-md border">
                 <Table>
+                  {/* Keep table structure the same as "all" tab */}
                   <TableHeader>
                     <TableRow>
                       <TableHead>Docket No</TableHead>
@@ -572,8 +392,10 @@ const MaintenanceDockets = () => {
               </div>
             </TabsContent>
             <TabsContent value="critical" className="m-0">
+              {/* Same table structure as "all" tab but with pre-filtered data */}
               <div className="rounded-md border">
                 <Table>
+                  {/* Keep table structure the same as "all" tab */}
                   <TableHeader>
                     <TableRow>
                       <TableHead>Docket No</TableHead>
@@ -646,8 +468,10 @@ const MaintenanceDockets = () => {
               </div>
             </TabsContent>
             <TabsContent value="closed" className="m-0">
+              {/* Same table structure as "all" tab but with pre-filtered data */}
               <div className="rounded-md border">
                 <Table>
+                  {/* Keep table structure the same as "all" tab */}
                   <TableHeader>
                     <TableRow>
                       <TableHead>Docket No</TableHead>
@@ -720,16 +544,14 @@ const MaintenanceDockets = () => {
               </div>
             </TabsContent>
           </Tabs>
-        )}
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
 
-    {/* Docket Details Dialog */}
-    <DocketDetailsDialog docket={selectedDocket} isOpen={isDetailsDialogOpen} onClose={() => setIsDetailsDialogOpen(false)} onStatusUpdate={handleDocketStatusUpdate} />
+      {/* Docket Details Dialog */}
+      <DocketDetailsDialog docket={selectedDocket} isOpen={isDetailsDialogOpen} onClose={() => setIsDetailsDialogOpen(false)} onStatusUpdate={handleDocketStatusUpdate} />
 
-    {/* New Docket Dialog */}
-    <NewDocketDialog isOpen={isNewDocketDialogOpen} onClose={() => setIsNewDocketDialogOpen(false)} />
-  </div>;
+      {/* New Docket Dialog */}
+      <NewDocketDialog isOpen={isNewDocketDialogOpen} onClose={() => setIsNewDocketDialogOpen(false)} />
+    </div>;
 };
-
 export default MaintenanceDockets;

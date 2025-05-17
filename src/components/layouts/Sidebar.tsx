@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { 
   LayoutDashboard, 
@@ -165,7 +166,7 @@ const Sidebar = ({ isOpen, toggleSidebar }: SidebarProps) => {
             {canViewMaintenance && (
               <SidebarNavGroup title="Maintenance" isOpen={isOpen}>
                 <SidebarNavItem
-                  to="/maintenance"
+                  to="/maintenance/dockets"
                   icon={<Wrench className="h-5 w-5" />}
                   label="Maintenance Dockets"
                   isOpen={isOpen}

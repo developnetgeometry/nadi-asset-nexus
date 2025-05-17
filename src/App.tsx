@@ -10,7 +10,6 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import AssetSettings from "./pages/AssetSettings";
 import MaintenanceDockets from "./pages/MaintenanceDockets";
-import MaintenanceSiteSelector from "./pages/MaintenanceSiteSelector";
 import Performance from "./pages/Performance";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
@@ -86,19 +85,7 @@ const App = () => {
                 }
               />
               <Route
-                path="/maintenance"
-                element={
-                  <ProtectedRoute>
-                    <AppLayout>
-                      <RoleBasedRoute allowedRoles={VIEW_MAINTENANCE_ROLES}>
-                        <MaintenanceSiteSelector />
-                      </RoleBasedRoute>
-                    </AppLayout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/maintenance/:siteId"
+                path="/maintenance/dockets"
                 element={
                   <ProtectedRoute>
                     <AppLayout>
