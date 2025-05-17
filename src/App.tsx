@@ -47,16 +47,17 @@ const RoleBasedRoute = ({ children, allowedRoles }: RoleBasedRouteProps) => {
 };
 
 const App = () => {
-  // Create a new QueryClient instance inside the component
+  // Create the QueryClient instance INSIDE the component function 
+  // This is critical for proper hook initialization
   const queryClient = new QueryClient();
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <AuthProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
+    <BrowserRouter>
+      <AuthProvider>
+        <QueryClientProvider client={queryClient}>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
             <Routes>
               <Route path="/login" element={<Login />} />
               <Route
@@ -121,10 +122,10 @@ const App = () => {
               />
               <Route path="*" element={<NotFound />} />
             </Routes>
-          </BrowserRouter>
-        </AuthProvider>
-      </TooltipProvider>
-    </QueryClientProvider>
+          </TooltipProvider>
+        </QueryClientProvider>
+      </AuthProvider>
+    </BrowserRouter>
   );
 };
 
