@@ -1,3 +1,4 @@
+
 // User Roles
 export type UserRole = 
   | 'SUPER_ADMIN'
@@ -84,7 +85,8 @@ export interface MaintenanceDocket {
   category: DocketCategory;
   slaCategory: SLACategory;
   status: DocketStatus;
-  location: string; // Explicitly define location property
+  location: string;
+  siteId?: string; // Add siteId property
   assetId?: string;
   assignedTo?: string;
   requestedBy: string;
@@ -112,6 +114,9 @@ export interface User {
   email: string;
   role: UserRole;
   site?: string; // The site ID that a TP_SITE user belongs to
+  organization?: string; // Add organization field
+  department?: string; // Add department field
+  phoneNumber?: string; // Add phone number field
   avatarUrl?: string;
   isActive: boolean;
   createdAt: string;

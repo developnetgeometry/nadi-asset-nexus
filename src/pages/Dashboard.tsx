@@ -1,4 +1,3 @@
-
 import { BarChart4, Box, CheckCircle, Clock, AlertCircle, Wrench, Search, Filter, Download, Eye, Settings, Trash2, Plus, ArrowLeft } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "../contexts/AuthContext";
@@ -98,8 +97,8 @@ const Dashboard = () => {
 
   // Set default site for TP_SITE users
   useEffect(() => {
-    if (currentUser && currentUser.role === "TP_SITE" && currentUser.siteId) {
-      setSelectedSite(currentUser.siteId);
+    if (currentUser && currentUser.role === "TP_SITE" && currentUser.site) {
+      setSelectedSite(currentUser.site);
       setShowSiteSelector(false);
     } else if (currentUser && isAdmin) {
       setShowSiteSelector(true);
