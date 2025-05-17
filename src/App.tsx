@@ -8,7 +8,6 @@ import { AuthProvider } from "./contexts/AuthContext";
 import AppLayout from "./components/layouts/AppLayout";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
-import Assets from "./pages/Assets";
 import AssetSettings from "./pages/AssetSettings";
 import MaintenanceDockets from "./pages/MaintenanceDockets";
 import Performance from "./pages/Performance";
@@ -20,7 +19,6 @@ import { UserRole } from "./types";
 
 // Define role-based permissions
 const VIEW_DASHBOARD_ROLES: UserRole[] = ["SUPER_ADMIN", "TP_ADMIN", "TP_OPERATION", "TP_PIC", "TP_SITE", "MCMC_ADMIN", "MCMC_OPERATION", "DUSP_ADMIN", "DUSP_OPERATION"];
-const VIEW_ASSETS_ROLES: UserRole[] = ["SUPER_ADMIN", "TP_ADMIN", "TP_OPERATION", "TP_PIC", "TP_SITE", "MCMC_ADMIN", "MCMC_OPERATION", "DUSP_ADMIN", "DUSP_OPERATION"];
 const CRUD_ASSETS_ROLES: UserRole[] = ["SUPER_ADMIN", "TP_ADMIN", "TP_OPERATION", "TP_PIC", "TP_SITE"];
 const VIEW_MAINTENANCE_ROLES: UserRole[] = ["SUPER_ADMIN", "TP_ADMIN", "TP_OPERATION", "TP_PIC", "TP_SITE", "MCMC_ADMIN", "MCMC_OPERATION", "DUSP_ADMIN", "DUSP_OPERATION", "VENDOR_ADMIN", "VENDOR_STAFF"];
 const CRUD_MAINTENANCE_ROLES: UserRole[] = ["SUPER_ADMIN", "TP_ADMIN", "TP_OPERATION", "TP_PIC", "TP_SITE"];
@@ -68,18 +66,6 @@ const App = () => {
                     <AppLayout>
                       <RoleBasedRoute allowedRoles={VIEW_DASHBOARD_ROLES}>
                         <Dashboard />
-                      </RoleBasedRoute>
-                    </AppLayout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/assets"
-                element={
-                  <ProtectedRoute>
-                    <AppLayout>
-                      <RoleBasedRoute allowedRoles={VIEW_ASSETS_ROLES}>
-                        <Assets />
                       </RoleBasedRoute>
                     </AppLayout>
                   </ProtectedRoute>
