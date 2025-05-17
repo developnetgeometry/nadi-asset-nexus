@@ -98,7 +98,7 @@ const App = () => {
                 }
               />
               <Route
-                path="/maintenance/dockets/:siteId"
+                path="/maintenance/:siteId"
                 element={
                   <ProtectedRoute>
                     <AppLayout>
