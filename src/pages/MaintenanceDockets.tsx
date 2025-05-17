@@ -1,5 +1,6 @@
+
 import { useState, useEffect } from "react";
-import { Wrench, Plus, Search, Download, Filter, Eye, FileText, Clock, AlertTriangle, CheckCircle, XCircle, CalendarDays, MessageSquare } from "lucide-react";
+import { Wrench, Plus, Search, Download, Filter, Eye, FileText, Clock, AlertTriangle, CheckCircle, XCircle, CalendarDays, MessageSquare, Building } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -159,7 +160,10 @@ const MaintenanceDockets = () => {
   // Filter dockets based on search, filters, and tab
   const filteredDockets = dockets.filter(docket => {
     // Filter by search term
-    const matchesSearch = searchTerm === "" || docket.docketNo.toLowerCase().includes(searchTerm.toLowerCase()) || docket.title.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = searchTerm === "" || 
+                         docket.docketNo.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                         docket.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (docket.siteName && docket.siteName.toLowerCase().includes(searchTerm.toLowerCase()));
 
     // Filter by type if selected
     const matchesType = typeFilter === null || docket.type === typeFilter;
@@ -168,9 +172,14 @@ const MaintenanceDockets = () => {
     const matchesStatus = statusFilter === null || docket.status === statusFilter;
 
     // Filter by tab
-    const matchesTab = currentTab === "all" || currentTab === "open" && !["CLOSED", "REJECTED"].includes(docket.status) || currentTab === "critical" && docket.slaCategory === "CRITICAL" || currentTab === "closed" && docket.status === "CLOSED";
+    const matchesTab = currentTab === "all" || 
+                      currentTab === "open" && !["CLOSED", "REJECTED"].includes(docket.status) || 
+                      currentTab === "critical" && docket.slaCategory === "CRITICAL" || 
+                      currentTab === "closed" && docket.status === "CLOSED";
+                      
     return matchesSearch && matchesType && matchesStatus && matchesTab;
   });
+  
   return <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
@@ -250,6 +259,7 @@ const MaintenanceDockets = () => {
                     <TableRow>
                       <TableHead>Docket No</TableHead>
                       <TableHead>Title</TableHead>
+                      <TableHead>TP Site</TableHead>
                       <TableHead>Type</TableHead>
                       <TableHead>SLA Category</TableHead>
                       <TableHead>Est. Completion</TableHead>
@@ -260,7 +270,7 @@ const MaintenanceDockets = () => {
                   </TableHeader>
                   <TableBody>
                     {filteredDockets.length === 0 ? <TableRow>
-                        <TableCell colSpan={8} className="text-center h-32 text-gray-500">
+                        <TableCell colSpan={9} className="text-center h-32 text-gray-500">
                           No maintenance dockets found matching your filters
                         </TableCell>
                       </TableRow> : filteredDockets.map(docket => <TableRow key={docket.id}>
@@ -271,6 +281,12 @@ const MaintenanceDockets = () => {
                               <div className="text-sm text-gray-500 truncate max-w-[250px]" title={docket.description}>
                                 {docket.description}
                               </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center">
+                              <Building className="h-4 w-4 text-gray-500 mr-2" />
+                              <span title={docket.location}>{docket.siteName || docket.location}</span>
                             </div>
                           </TableCell>
                           <TableCell>
@@ -315,15 +331,16 @@ const MaintenanceDockets = () => {
                 </Table>
               </div>
             </TabsContent>
+            
             <TabsContent value="open" className="m-0">
               {/* Same table structure as "all" tab but with pre-filtered data */}
               <div className="rounded-md border">
                 <Table>
-                  {/* Keep table structure the same as "all" tab */}
                   <TableHeader>
                     <TableRow>
                       <TableHead>Docket No</TableHead>
                       <TableHead>Title</TableHead>
+                      <TableHead>TP Site</TableHead>
                       <TableHead>Type</TableHead>
                       <TableHead>SLA Category</TableHead>
                       <TableHead>Est. Completion</TableHead>
@@ -334,7 +351,7 @@ const MaintenanceDockets = () => {
                   </TableHeader>
                   <TableBody>
                     {filteredDockets.length === 0 ? <TableRow>
-                        <TableCell colSpan={8} className="text-center h-32 text-gray-500">
+                        <TableCell colSpan={9} className="text-center h-32 text-gray-500">
                           No maintenance dockets found matching your filters
                         </TableCell>
                       </TableRow> : filteredDockets.map(docket => <TableRow key={docket.id}>
@@ -345,6 +362,12 @@ const MaintenanceDockets = () => {
                               <div className="text-sm text-gray-500 truncate max-w-[250px]" title={docket.description}>
                                 {docket.description}
                               </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center">
+                              <Building className="h-4 w-4 text-gray-500 mr-2" />
+                              <span title={docket.location}>{docket.siteName || docket.location}</span>
                             </div>
                           </TableCell>
                           <TableCell>
@@ -391,15 +414,16 @@ const MaintenanceDockets = () => {
                 </Table>
               </div>
             </TabsContent>
+            
             <TabsContent value="critical" className="m-0">
               {/* Same table structure as "all" tab but with pre-filtered data */}
               <div className="rounded-md border">
                 <Table>
-                  {/* Keep table structure the same as "all" tab */}
                   <TableHeader>
                     <TableRow>
                       <TableHead>Docket No</TableHead>
                       <TableHead>Title</TableHead>
+                      <TableHead>TP Site</TableHead>
                       <TableHead>Type</TableHead>
                       <TableHead>SLA Category</TableHead>
                       <TableHead>Est. Completion</TableHead>
@@ -410,7 +434,7 @@ const MaintenanceDockets = () => {
                   </TableHeader>
                   <TableBody>
                     {filteredDockets.length === 0 ? <TableRow>
-                        <TableCell colSpan={8} className="text-center h-32 text-gray-500">
+                        <TableCell colSpan={9} className="text-center h-32 text-gray-500">
                           No maintenance dockets found matching your filters
                         </TableCell>
                       </TableRow> : filteredDockets.map(docket => <TableRow key={docket.id}>
@@ -421,6 +445,12 @@ const MaintenanceDockets = () => {
                               <div className="text-sm text-gray-500 truncate max-w-[250px]" title={docket.description}>
                                 {docket.description}
                               </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center">
+                              <Building className="h-4 w-4 text-gray-500 mr-2" />
+                              <span title={docket.location}>{docket.siteName || docket.location}</span>
                             </div>
                           </TableCell>
                           <TableCell>
@@ -467,15 +497,16 @@ const MaintenanceDockets = () => {
                 </Table>
               </div>
             </TabsContent>
+            
             <TabsContent value="closed" className="m-0">
               {/* Same table structure as "all" tab but with pre-filtered data */}
               <div className="rounded-md border">
                 <Table>
-                  {/* Keep table structure the same as "all" tab */}
                   <TableHeader>
                     <TableRow>
                       <TableHead>Docket No</TableHead>
                       <TableHead>Title</TableHead>
+                      <TableHead>TP Site</TableHead>
                       <TableHead>Type</TableHead>
                       <TableHead>SLA Category</TableHead>
                       <TableHead>Est. Completion</TableHead>
@@ -486,7 +517,7 @@ const MaintenanceDockets = () => {
                   </TableHeader>
                   <TableBody>
                     {filteredDockets.length === 0 ? <TableRow>
-                        <TableCell colSpan={8} className="text-center h-32 text-gray-500">
+                        <TableCell colSpan={9} className="text-center h-32 text-gray-500">
                           No maintenance dockets found matching your filters
                         </TableCell>
                       </TableRow> : filteredDockets.map(docket => <TableRow key={docket.id}>
@@ -497,6 +528,12 @@ const MaintenanceDockets = () => {
                               <div className="text-sm text-gray-500 truncate max-w-[250px]" title={docket.description}>
                                 {docket.description}
                               </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center">
+                              <Building className="h-4 w-4 text-gray-500 mr-2" />
+                              <span title={docket.location}>{docket.siteName || docket.location}</span>
                             </div>
                           </TableCell>
                           <TableCell>

@@ -85,7 +85,9 @@ export interface MaintenanceDocket {
   category: DocketCategory;
   slaCategory: SLACategory;
   status: DocketStatus;
-  location: string; // Explicitly define location property
+  location: string; // Location name
+  locationId?: string; // Adding locationId for reference
+  siteName?: string; // Adding site name field
   assetId?: string;
   assignedTo?: string;
   requestedBy: string;
