@@ -27,17 +27,14 @@ const MaintenanceSiteSelector = () => {
   // Get site statistics
   const siteStatistics = sites.map(site => {
     const siteAssets = mockAssets.filter(asset => asset.location_id === site);
-    const totalAssets = siteAssets.length;
-    const activeAssets = siteAssets.filter(asset => asset.status === "ACTIVE").length;
-    const underRepairAssets = siteAssets.filter(asset => asset.status === "UNDER_REPAIR").length;
-
+    // Calculate site metrics (now for dockets instead of assets)
     return {
       siteId: site,
       name: site, // Using siteId as name since we don't have a separate name field
       state: "Unknown", // Default state since it's not in the Asset type
-      totalAssets,
-      activeAssets,
-      underRepairAssets
+      totalDockets: Math.floor(Math.random() * 20) + 1, // Mock data for demonstration
+      openDockets: Math.floor(Math.random() * 10) + 1, // Mock data for demonstration
+      criticalDockets: Math.floor(Math.random() * 5) // Mock data for demonstration
     };
   });
 
@@ -49,12 +46,12 @@ const MaintenanceSiteSelector = () => {
   );
 
   const handleViewSite = (siteId: string) => {
-    navigate(`/maintenance/dockets/${siteId}`);
+    navigate(`/maintenance/${siteId}`);
   };
 
   // Redirect TP_SITE users to their specific site
   if (isTpSite && currentUser && currentUser.site) {
-    navigate(`/maintenance/dockets/${currentUser.site}`);
+    navigate(`/maintenance/${currentUser.site}`);
     return null;
   }
 
@@ -93,9 +90,9 @@ const MaintenanceSiteSelector = () => {
                   <TableHead>Site ID</TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead>State</TableHead>
-                  <TableHead>Total Assets</TableHead>
-                  <TableHead>Active Assets</TableHead>
-                  <TableHead>Under Maintenance</TableHead>
+                  <TableHead>Total Docket</TableHead>
+                  <TableHead>Open Docket</TableHead>
+                  <TableHead>Critical Docket</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -113,16 +110,21 @@ const MaintenanceSiteSelector = () => {
                       <TableCell>{site.siteId}</TableCell>
                       <TableCell>{site.name}</TableCell>
                       <TableCell>{site.state}</TableCell>
-                      <TableCell>{site.totalAssets}</TableCell>
+                      <TableCell>{site.totalDockets}</TableCell>
                       <TableCell>
-                        <span className="text-green-600 font-medium">{site.activeAssets}</span>
+                        <span className="text-blue-600 font-medium">{site.openDockets}</span>
                       </TableCell>
                       <TableCell>
-                        <span className="text-red-600 font-medium">{site.underRepairAssets}</span>
+                        <span className="text-red-600 font-medium">{site.criticalDockets}</span>
                       </TableCell>
                       <TableCell>
                         <div className="flex justify-end items-center space-x-1">
-                          <Button variant="outline" size="sm" className="h-8 w-8 p-0 rounded-md border-indigo-200" onClick={() => handleViewSite(site.siteId)}>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="h-8 w-8 p-0 rounded-md border-indigo-200" 
+                            onClick={() => handleViewSite(site.siteId)}
+                          >
                             <Eye className="h-4 w-4 text-indigo-600" />
                           </Button>
                         </div>
