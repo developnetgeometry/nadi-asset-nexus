@@ -1,5 +1,4 @@
-
-import { BarChart4, Box, CheckCircle, Clock, AlertCircle, Wrench, Search, Filter, Download, Eye, Settings, Trash2 } from "lucide-react";
+import { BarChart4, Box, CheckCircle, Clock, AlertCircle, Wrench, Search, Filter, Download, Eye, Settings, Trash2, Plus } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "../contexts/AuthContext";
 import { mockKPIStats, mockAssets } from "../data/mockData";
@@ -188,7 +187,7 @@ const Dashboard = () => {
                       <TableCell>{asset.category}</TableCell>
                       <TableCell>{asset.qty_unit}</TableCell>
                       <TableCell>{asset.location_id}</TableCell>
-                      <TableCell>{asset.created_date ? new Date(asset.created_date).toLocaleDateString() : "N/A"}</TableCell>
+                      <TableCell>{asset.createdAt ? new Date(asset.createdAt).toLocaleDateString() : "N/A"}</TableCell>
                       <TableCell>
                         <Badge className={
                           asset.status === "ACTIVE" ? "bg-green-100 text-green-800" : 
